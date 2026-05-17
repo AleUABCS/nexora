@@ -20,20 +20,34 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const router = useRouter();
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   const handleLogin = async() => {
     if(email === '' || password === '') {
         Alert.alert('Aviso', 'Por favor llena todos los campos');
         return;
     }
+    console.log("¿Email válido?: ", emailRegex.test(email));
+    if(!emailRegex.test(email)){
+        Alert.alert('Aviso', 'El email no es valido');
+        return;
+    }
     try {
       await signInWithEmailAndPassword(auth,email,password)
-      Alert.alert('Iniciando sesion','Accediendo...')
       router.replace('/(tabs)');
     } catch (error) {
       console.log(error)
     }
   };
+
+  const handleRegister = async() => {
+    try {
+      router.push('/register');
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
 
   return (
     <KeyboardAvoidingView 
@@ -55,7 +69,7 @@ export default function LoginScreen() {
               <Text style={styles.label}>Correo</Text>
               <TextInput
                 style={styles.input}
-                placeholder="correo@ejemplo.com"
+                placeholder="correo@gmail.com"
                 placeholderTextColor="#A0A0A0"
                 value={email}
                 onChangeText={setEmail}
@@ -84,7 +98,7 @@ export default function LoginScreen() {
           {/* Pie de página */}
           <View style={styles.footer}>
             <Text style={styles.footerText}>¿No tienes una cuenta? </Text>
-            <TouchableOpacity>
+            <TouchableOpacity  onPress={handleRegister}>
               <Text style={styles.registerText}>Registrarse</Text>
             </TouchableOpacity>
           </View>
@@ -112,7 +126,7 @@ const styles = StyleSheet.create({
   logoText: {
     fontSize: 36,
     fontWeight: '900',
-    color: '#155EEF', // Azul vibrante del logo
+    color: '#155EEF', 
     fontStyle: 'italic',
     marginBottom: 20,
     letterSpacing: 1,
@@ -127,12 +141,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 24,
-    // Sombra para iOS
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 12,
-    // Sombra para Android
     elevation: 5, 
     marginBottom: 30,
   },
@@ -149,7 +161,7 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: '#E5E5E5',
-    borderRadius: 20, // Bordes bien redondeados como en la imagen
+    borderRadius: 20,
     paddingVertical: 14,
     paddingHorizontal: 16,
     fontSize: 15,
@@ -157,7 +169,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FAFAFA',
   },
   button: {
-    backgroundColor: '#0056D2', // Azul del botón
+    backgroundColor: '#0056D2', 
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
@@ -179,7 +191,7 @@ const styles = StyleSheet.create({
   },
   registerText: {
     fontSize: 14,
-    color: '#0056D2', // Azul que hace juego con el botón
+    color: '#0056D2', 
     fontWeight: '600',
   },
 });
