@@ -34,7 +34,6 @@ export default function LoginScreen() {
     }
     try {
       await signInWithEmailAndPassword(auth,email,password)
-      router.replace('/(tabs)');
     } catch (error) {
       console.log(error)
     }
@@ -42,7 +41,7 @@ export default function LoginScreen() {
 
   const handleRegister = async() => {
     try {
-      router.push('/register');
+      router.push('/(auth)/register');
     } catch (error) {
       console.log(error)
     }
