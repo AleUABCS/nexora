@@ -5,9 +5,9 @@ import {
   View, 
   TextInput, 
   FlatList, 
-  TouchableOpacity, 
-  SafeAreaView 
+  TouchableOpacity
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { FontAwesome5, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 const CATEGORIES = [
