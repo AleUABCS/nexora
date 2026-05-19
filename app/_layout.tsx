@@ -1,3 +1,4 @@
+//Estas son todas las importaciones que necesita 
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import {
   DarkTheme,
@@ -10,13 +11,12 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
 import "react-native-reanimated";
 
-// IMPORTACIONES DE FIREBASE
+// estas son las importaciones para firebase
 import { getAuth, onAuthStateChanged, User } from "firebase/auth";
 import appFirebase from "../credenciales.js";
 const auth = getAuth(appFirebase);
 
 import { useColorScheme } from "@/components/useColorScheme";
-
 export { ErrorBoundary } from "expo-router";
 
 export const unstable_settings = {
@@ -25,6 +25,7 @@ export const unstable_settings = {
 
 SplashScreen.preventAutoHideAsync();
 
+//Funcion que se usa para cargar algun error y cargar las fuentes, si sale true que ya cargo manda al rootLayoutNav
 export default function RootLayout() {
   const [loaded, error] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
@@ -45,21 +46,24 @@ export default function RootLayout() {
     return null;
   }
 
-  return <RootLayoutNav />;
+  return <RootLayoutNav/>;
 }
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
   const router = useRouter();
 
-  // ESTADOS PARA CONTROLAR LA SESIÓN
+  // user: Guarda el usuario autenticado o null si no hay sesión
+  //initializing: true mientras Firebase verifica si hay sesión activa
   const [user, setUser] = useState<User | null>(null);
   const [initializing, setInitializing] = useState(true);
 
-  // ESCUCHAR SI EL USUARIO ESTÁ LOGUEADO O NO
+  // listener para saber si hay usuario logueado
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      //si hay user tiene sus datos y si no es null
       setUser(currentUser);
+      //Marca que Firebase ya terminó de verificar el estado de autenticación
       setInitializing(false);
     });
 
@@ -69,12 +73,11 @@ function RootLayoutNav() {
   //REDIRECCIÓN AUTOMÁTICA
   useEffect(() => {
     if (initializing) return;
-
     if (user) {
       // Si hay usuario, directo a la pestaña principal
       router.replace("/(tabs)");
     } else {
-      // Si no hay usuario, directo a tu pantalla login.tsx
+      // Si no hay usuario, directo a tu pantalla login
       router.replace("/(auth)/login");
     }
   }, [user, initializing]);

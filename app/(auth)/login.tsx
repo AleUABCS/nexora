@@ -27,7 +27,6 @@ export default function LoginScreen() {
         Alert.alert('Aviso', 'Por favor llena todos los campos');
         return;
     }
-    console.log("¿Email válido?: ", emailRegex.test(email));
     if(!emailRegex.test(email)){
         Alert.alert('Aviso', 'El email no es valido');
         return;
@@ -56,13 +55,11 @@ export default function LoginScreen() {
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.innerContainer}>
           
-          {/* Encabezado */}
           <View style={styles.headerContainer}>
             <Text style={styles.logoText}>NEXORA</Text>
             <Text style={styles.titleText}>Bienvenido</Text>
           </View>
 
-          {/* Tarjeta del Formulario */}
           <View style={styles.card}>
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Correo</Text>
@@ -94,7 +91,6 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Pie de página */}
           <View style={styles.footer}>
             <Text style={styles.footerText}>¿No tienes una cuenta? </Text>
             <TouchableOpacity  onPress={handleRegister}>
@@ -190,7 +186,7 @@ const styles = StyleSheet.create({
   },
   registerText: {
     fontSize: 14,
-    color: '#0056D2', 
+    color: '#0057d1', 
     fontWeight: '600',
   },
 });

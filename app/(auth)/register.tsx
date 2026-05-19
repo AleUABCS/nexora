@@ -74,13 +74,11 @@ export default function registerScreen(){
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={styles.innerContainer}>
               
-              {/* Encabezado */}
               <View style={styles.headerContainer}>
                 <Text style={styles.logoText}>NEXORA</Text>
                 <Text style={styles.titleText}>Registro</Text>
               </View>
-    
-              {/* Tarjeta del Formulario */}
+
               <View style={styles.card}>
 
                 <View style={styles.inputGroup}>
