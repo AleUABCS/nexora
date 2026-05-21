@@ -22,7 +22,7 @@ export default function HomeScreen() {
 
   const RenderBusiness = async () => {
     try {
-      router.push('/(stacks)/business')
+      router.push('/business')
     } catch (error) {
       console.log(error)
     }
