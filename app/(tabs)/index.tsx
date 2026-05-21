@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   StyleSheet, 
   Text, 
@@ -8,18 +8,42 @@ import {
   TouchableOpacity
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import appFirebase from '../../credenciales.js';
+import { getFirestore, collection, getDocs } from 'firebase/firestore';
 import { FontAwesome5, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
+const db = getFirestore(appFirebase);
+
 const CATEGORIES = [
-  { id: '1', name: 'Gimnasio', icon: 'dumbbell', type: 'FontAwesome5' },
-  { id: '2', name: 'Purificadora', icon: 'water', type: 'Ionicons' },
+  { id: '1', name: 'Gimnasios', icon: 'dumbbell', type: 'FontAwesome5' },
+  { id: '2', name: 'Purificadoras', icon: 'water', type: 'Ionicons' },
   { id: '3', name: 'Tienda de regalos', icon: 'gift', type: 'FontAwesome5' },
-  { id: '4', name: 'Supermercado', icon: 'shopping-bag', type: 'FontAwesome5' },
+  { id: '4', name: 'Supermercados', icon: 'shopping-bag', type: 'FontAwesome5' },
+  { id: '5', name: 'Barberias', icon: 'cut', type: 'Ionicons' },
+  { id: '6', name: 'Spa´s', icon: 'accessibility', type: 'Ionicons' },
 ];
 
 export default function HomeScreen() {
+  const [negocios, setNegocios] = useState<any[]>([]);
 
- const renderCategoryItem = ({ item }: { item: any }) => {
+  useEffect(() => {
+    const obtenerNegocios = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'negocios'));
+        const lista = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setNegocios(lista);
+      } catch (error) {
+        console.error("Error al obtener los datos: ", error);
+      }
+    };
+
+    obtenerNegocios();
+  }, []);
+
+  const renderCategoryItem = ({ item }: { item: any }) => {
     return (
       <TouchableOpacity style={styles.categoryButton}>
         <View style={styles.iconContainer}>
@@ -34,11 +58,21 @@ export default function HomeScreen() {
     );
   };
 
+  const renderBusiness = ({ item }: { item: any }) => {
+    return (
+      <View style={styles.businessCard}>
+        <Text style={styles.businessName}>{item.nombreNegocio || item.nombre}</Text>
+        <Text style={styles.businessDetail}>Descripción: {item.descripcion}</Text>
+        <Text style={styles.businessDetail}>Teléfono: {item.telefonoNegocio}</Text>
+        <Text style={styles.businessDetail}>Email: {item.emailNegocio}</Text>
+      </View>
+    );
+  };
+
   return (
     <SafeAreaView style={styles.mainContainer}>
       <View style={styles.innerContainer}>
         
-        {/* 3. Barra de Búsqueda */}
         <View style={styles.searchContainer}>
           <TextInput 
             style={styles.searchInput}
@@ -48,7 +82,6 @@ export default function HomeScreen() {
           <Ionicons name="search" size={22} color="#A0A0A0" style={styles.searchIcon} />
         </View>
 
-        {/* 4. Lista Horizontal de Categorías */}
         <View style={styles.categoriesSection}>
           <FlatList
             data={CATEGORIES}
@@ -60,7 +93,14 @@ export default function HomeScreen() {
           />
         </View>
 
-        {/* Aquí colocaremos las tiendas más adelante */}
+        <View style={styles.businessSection}>
+          <FlatList
+            data={negocios} 
+            renderItem={renderBusiness}
+            keyExtractor={(item) => item.id}
+            showsVerticalScrollIndicator={false} // Cambiado a vertical para que se vea como lista hacia abajo
+          />
+        </View>
 
       </View>
     </SafeAreaView>
@@ -126,5 +166,40 @@ const styles = StyleSheet.create({
     color: '#155EEF',
     textAlign: 'center',
     fontWeight: '500',
+  },
+  // ESTILOS NUEVOS PARA QUE LOS NEGOCIOS SE VEAN BONITOS
+  businessSection: {
+    flex: 1,
+    marginTop: 10,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333333',
+    marginBottom: 15,
+  },
+  businessCard: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  businessName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#101828',
+    marginBottom: 6,
+  },
+  businessDetail: {
+    fontSize: 13,
+    color: '#667085',
+    marginBottom: 2,
   },
 });

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { collection, addDoc } from "firebase/firestore"; 
 import { getFirestore } from "firebase/firestore";
-import appFirebase from '../../credenciales.js'
-import {getAuth, createUserWithEmailAndPassword} from 'firebase/auth'
-const auth = getAuth(appFirebase)
+import appFirebase from '../credenciales.js'
+import {getAuth} from 'firebase/auth';
+const auth = getAuth(appFirebase);
+const db = getFirestore(appFirebase);
 import { 
   View, 
   Text, 
@@ -18,52 +19,52 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 
-export default function registerScreen(){
-    const [name, setName] = useState('');
+export default function registerBusinessScreen(){
+    const [nameBusiness, setNameBusiness] = useState('');
     const [phone, setPhone] = useState('');
-    const [password, setPassword] = useState('');
-    const [passwordConfirm, setPasswordConfirm] = useState('');
     const [email, setEmail] = useState('');
+    const [description, setDescription] = useState('');
     const router = useRouter();
+    //para saber si es numero valido
     const regex = /^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/;
+    //Para saber si es un email valido
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    const handleRegister = async() => {
-        if(email === '' || password === '' || name === '' || phone === '' || passwordConfirm === '') {
-            Alert.alert('Aviso', 'Por favor llena todos los campos');
-            return;
-        }
-        if(password !== passwordConfirm){
-            Alert.alert('Aviso', 'Las contraseñas no coinciden');
-            return;
-        }
-        if(!regex.test(phone)){
-            Alert.alert('Aviso', 'El numero no es valido');
-            return;
-        }
-        console.log("¿Email válido?: ", emailRegex.test(email));
-        if(!emailRegex.test(email)){
-            Alert.alert('Aviso', 'El email no es valido');
-            return;
-        }
-        try {
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            const userId = userCredential.user.uid;
-
-            const db = getFirestore(appFirebase);
-            await addDoc(collection(db, "usuarios"), {
-                uid: userId,
-                nombre: name,
-                email: email,
-                telefono: phone,
-                fechaRegistro: new Date()
-            });
-        
-            Alert.alert('Éxito', 'Usuario registrado correctamente');
-            router.replace('/(tabs)'); 
-        } catch (error) {
-          console.log(error)
-        }
+    const handleRegisterBusiness = async() => {
+      const usuarioActual = auth.currentUser;
+      if(!usuarioActual){
+        Alert.alert('Aviso', 'Usuario no logueado');
+          return;
+      }
+      if(nameBusiness === '' || description === '' ||  phone === '' || email === '') {
+          Alert.alert('Aviso', 'Por favor llena todos los campos');
+          return;
+      }
+      if(!regex.test(phone)){
+          Alert.alert('Aviso', 'El numero no es valido');
+          return;
+      }
+      if(!emailRegex.test(email)){
+          Alert.alert('Aviso', 'El email no es valido');
+          return;
+      }
+      
+      try {
+          const newBusiness = {
+            nombreNegocio :nameBusiness,
+            userId:usuarioActual.uid,
+            descripcion: description,
+            telefonoNegocio: phone,
+            emailNegocio:email,
+            createdAt: new Date().toISOString()
+          };
+          await addDoc(collection(db, "negocios"), newBusiness);
+    
+          Alert.alert('Éxito', 'Negocio registrado');
+          router.back();
+      } catch (error) {
+        console.log(error)
+      }
     };
 
     return (
@@ -75,26 +76,26 @@ export default function registerScreen(){
             <View style={styles.innerContainer}>
               
               <View style={styles.headerContainer}>
-                <Text style={styles.logoText}>NEXORA</Text>
-                <Text style={styles.titleText}>Registro</Text>
+                
+                <Text style={styles.titleText}>Registro negocio</Text>
               </View>
 
               <View style={styles.card}>
 
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Nombre</Text>
+                  <Text style={styles.label}>Nombre del Negocio</Text>
                   <TextInput
                     style={styles.input}
-                    placeholder="nombre completo"
+                    placeholder="nombre del completo"
                     placeholderTextColor="#A0A0A0"
-                    value={name}
-                    onChangeText={setName}
+                    value={nameBusiness}
+                    onChangeText={setNameBusiness}
                     autoCapitalize="none"
                   />
                 </View>
 
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Correo</Text>
+                  <Text style={styles.label}>Correo del Negocio</Text>
                   <TextInput
                     style={styles.input}
                     placeholder="correo@gmail.com"
@@ -119,31 +120,19 @@ export default function registerScreen(){
                 </View>
     
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Contraseña</Text>
+                  <Text style={styles.label}>Descripcion</Text>
                   <TextInput
                     style={styles.input}
                     placeholder="· · · · · · · ·"
                     placeholderTextColor="#A0A0A0"
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry
-                  />
-                </View>
-
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Confirma tu contraseña</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="· · · · · · · ·"
-                    placeholderTextColor="#A0A0A0"
-                    value={passwordConfirm}
-                    onChangeText={setPasswordConfirm}
+                    value={description}
+                    onChangeText={setDescription}
                     secureTextEntry
                   />
                 </View>
     
-                <TouchableOpacity style={styles.button} onPress={handleRegister}>
-                  <Text style={styles.buttonText}>Registrarse</Text>
+                <TouchableOpacity style={styles.button} onPress={handleRegisterBusiness}>
+                  <Text style={styles.buttonText}>Registrar Negocio</Text>
                 </TouchableOpacity>
               </View>
             </View>
