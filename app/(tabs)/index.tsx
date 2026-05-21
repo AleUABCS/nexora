@@ -1,24 +1,32 @@
+import { FontAwesome5, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useRouter } from "expo-router";
 import React from 'react';
-import { 
-  StyleSheet, 
-  Text, 
-  View, 
-  TextInput, 
-  FlatList, 
-  TouchableOpacity
+import {
+  FlatList,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { FontAwesome5, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-
 const CATEGORIES = [
   { id: '1', name: 'Gimnasio', icon: 'dumbbell', type: 'FontAwesome5' },
   { id: '2', name: 'Purificadora', icon: 'water', type: 'Ionicons' },
   { id: '3', name: 'Tienda de regalos', icon: 'gift', type: 'FontAwesome5' },
   { id: '4', name: 'Supermercado', icon: 'shopping-bag', type: 'FontAwesome5' },
 ];
+const router = useRouter()
 
 export default function HomeScreen() {
 
+  const RenderBusiness = async () => {
+    try {
+      router.push('/(stacks)/business')
+    } catch (error) {
+      console.log(error)
+    }
+  }
  const renderCategoryItem = ({ item }: { item: any }) => {
     return (
       <TouchableOpacity style={styles.categoryButton}>
@@ -62,6 +70,11 @@ export default function HomeScreen() {
 
         {/* Aquí colocaremos las tiendas más adelante */}
 
+        {/* Debug ale */}
+          <TouchableOpacity style={styles.categoryButton} onPress={RenderBusiness}>
+            <View style={styles.iconContainer}><Text> Negocio</Text></View>
+            
+          </TouchableOpacity>
       </View>
     </SafeAreaView>
   );

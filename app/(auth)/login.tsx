@@ -1,20 +1,20 @@
-import React, { useState } from 'react';
-import appFirebase from '../../credenciales.js'
-import {getAuth, signInWithEmailAndPassword} from 'firebase/auth'
-const auth = getAuth(appFirebase)
-import { 
-  View, 
-  Text, 
-  TextInput, 
-  TouchableOpacity, 
-  StyleSheet, 
-  KeyboardAvoidingView, 
-  Platform,
-  TouchableWithoutFeedback,
-  Keyboard,
-  Alert
-} from 'react-native';
 import { useRouter } from 'expo-router';
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import React, { useState } from 'react';
+import {
+  Alert,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View
+} from 'react-native';
+import appFirebase from '../../credenciales.js';
+const auth = getAuth(appFirebase)
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
