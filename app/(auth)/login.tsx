@@ -45,8 +45,7 @@ export default function LoginScreen() {
       console.log(error)
     }
   }
-
-
+  
   return (
     <KeyboardAvoidingView 
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
