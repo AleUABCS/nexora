@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  StyleSheet, 
-  Text, 
-  View, 
-  TextInput, 
-  FlatList, 
-  TouchableOpacity
+import { FontAwesome5, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { collection, getDocs, getFirestore } from 'firebase/firestore';
+import React, { useEffect, useState } from 'react';
+import {
+  FlatList,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import appFirebase from '../../credenciales.js';
-import { getFirestore, collection, getDocs } from 'firebase/firestore';
-import { FontAwesome5, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 const db = getFirestore(appFirebase);
 
