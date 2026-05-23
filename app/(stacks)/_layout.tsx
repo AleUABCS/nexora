@@ -4,7 +4,15 @@ export default function StackLayout () {
   return (
     <Stack>
       <Stack.Screen 
+        name="add-business" 
+        options={{ headerShown: false }} 
+      />
+      <Stack.Screen 
         name="business" 
+        options={{ headerShown: false }} 
+      />
+      <Stack.Screen 
+        name="set-schedule" 
         options={{ headerShown: false }} 
       />
     </Stack>
