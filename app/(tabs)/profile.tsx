@@ -1,8 +1,11 @@
-import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
-import { getAuth, signOut } from 'firebase/auth';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { getAuth, signOut } from 'firebase/auth';
+import React from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import appFirebase from '../../credenciales.js';
+
+const router = useRouter();
 
 const auth = getAuth(appFirebase);
 
@@ -31,10 +34,18 @@ export default function ProfileScreen() {
           <Ionicons name="person" size={85} color="#4D82F3" style={styles.avatarIcon} />
         </View>
       </View>
-
+      
       <View style={styles.card}>
         {menuItems.map((item) => (
-          <TouchableOpacity key={item.id} style={styles.menuItem} activeOpacity={0.6}>
+          <TouchableOpacity key={item.id} style={styles.menuItem} activeOpacity={0.6}
+           onPress={ () => {
+              if (item.id === '1') // Guardados
+                router.push('/saved')
+              else if (item.id === '2') // Reseñas publicadas
+                router.push('/reviews')
+            }
+          }
+          >
             <View style={styles.iconWrapper}>
               <Ionicons name={item.icon as any} size={22} color="#155EEF" />
             </View>

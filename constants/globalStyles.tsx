@@ -1,7 +1,15 @@
 import { StyleSheet } from "react-native"
-
 export const colors = {
-    placeHolder: "#A1A1A1"
+    placeHolder: "#A1A1A1",
+    warn: "#ffc73b",
+    mainBlue: "#0056D2",
+    regularText: "#555555"
+}
+
+export const iconStyles = {
+    listIcon: {
+        size: 32,
+    },
 }
 
 export const globalStyles = StyleSheet.create({
@@ -44,17 +52,28 @@ export const globalStyles = StyleSheet.create({
     fontSize: 15,
     color: '#000',
     backgroundColor: '#FAFAFA',
-  },
-  button: {
-    backgroundColor: '#0056D2', 
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
+    },
+    button: {
+        backgroundColor: '#0056D2', 
+        borderRadius: 12,
+        paddingVertical: 16,
+        alignItems: 'center',
+        marginTop: 10,
+    },
+    buttonText: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    listItem: {
+        flexDirection: 'row', 
+        justifyContent: 'space-between',
+        padding: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: '#ccc'
+    },
+    listItemText: {
+        color: colors.regularText,
+        fontSize: 16,
+    },
 })

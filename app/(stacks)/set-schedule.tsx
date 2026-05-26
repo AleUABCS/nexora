@@ -7,8 +7,6 @@ import { colors, globalStyles } from '../../constants/globalStyles';
 
 export default function SetSchedule() {
 
-    let blockCount = 1
-
     const [time, setTime] = useState('');
 
     // Para renderizar los botones de los días
@@ -87,8 +85,8 @@ export default function SetSchedule() {
 
     return (
         // Contenedor padre
+        
         <SafeAreaView style={globalStyles.mainContainer}>
-
             {/* Título: Horario */}
             <Text style = {globalStyles.titleText}>Horario</Text>
 
@@ -105,25 +103,26 @@ export default function SetSchedule() {
 
                     <View style = {styles.dayButtonsContainer}>
 
+                        {/* Renderizar los botones de los días */}
                         {dayButtons.map((day, index) => (
                             <TouchableOpacity
-                            key={day}
-                            style={[
-                                styles.dayButton,
-                                selectedDay === day && styles.dayButtonActive
-                            ]}
-                            onPress = {() => setSelectedDay(day as DayKey)}
-                            >
-
-                                <Text
-                                style = {[
-                                    styles.dayButtonText,
-                                    selectedDay === day && styles.dayButtonTextActive
+                                key={day}
+                                style={[
+                                    styles.dayButton,
+                                    selectedDay === day && styles.dayButtonActive
                                 ]}
-
+                                onPress = {() => setSelectedDay(day as DayKey)}
                                 >
 
-                                </Text>
+                                    <Text
+                                    style = {[
+                                        styles.dayButtonText,
+                                        selectedDay === day && styles.dayButtonTextActive
+                                    ]}
+                                    onPress = {() => setSelectedDay(day as DayKey)}
+                                    >
+                                    {dayButtons[index]}
+                                    </Text>
 
                             </TouchableOpacity>
                         ))}
@@ -142,41 +141,76 @@ export default function SetSchedule() {
                     {/* Bloque de horario */}
                     <View>
                         <View style = {{flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center'}}>
+                        
+                            {schedule[selectedDay].length === 0 ? (
+                                <Text
+                                    style = {{
+                                        ...styles.cardText,
+                                        marginVertical: 20,
+                                        color: colors.placeHolder,
+                                        textAlign: 'center'
+                                    }}
+                                >
+                                    Sin horarios configurados
+                                </Text>
+                            ) :  (
+                                schedule[selectedDay].map((slot, index) => (
+                                    <View 
+                                    style = {{
+                                        flexDirection: 'row',
+                                        justifyContent: 'space-around',
+                                        alignItems: 'center',
+                                    }}
+                                    >
+                                        <Text style = {styles.cardText}>
+                                            Bloque {index + 1}
+                                        </Text>
+                                        
+                                        <TextInput
+                                        style = {{...globalStyles.input, width: 70, height: 40}}
+                                        placeholder='00:00'
+                                        placeholderTextColor={colors.placeHolder}
+                                        value={slot.opening}
+                                        onChangeText={(text) => handleTimeInput(slot.id, 'opening', text)}
+                                        keyboardType='numeric'
+                                        maxLength={5}
+                                        />
+                                        
+                                        <Text style = {styles.cardText}>
+                                            a
+                                        </Text>
 
-                            <Text style = {styles.cardText}>
-                                Bloque {blockCount}
-                            </Text>
-                            <TextInput 
-                            style = {{...globalStyles.input, width: 70, height: 40}}
-                            placeholder='00:00'
-                            placeholderTextColor={colors.placeHolder}
-                            value = {time}
-                            keyboardType='numeric'
-                            maxLength={5}
-                            ></TextInput>
+                                        <TextInput
+                                        style = {{...globalStyles.input, width: 70, height: 40}}
+                                        placeholder='00:00'
+                                        placeholderTextColor={colors.placeHolder}
+                                        value={slot.closing}
+                                        onChangeText={(text) => handleTimeInput(slot.id, 'closing', text)}
+                                        keyboardType='numeric'
+                                        maxLength={5}
+                                        />
 
-                            <Text style = {styles.cardText}>
-                                a
-                            </Text>
+                                        <TouchableOpacity
+                                        onPress={() => removeScheduleSlot(index)}
+                                        style = {{width: 32, height: 32, alignItems: 'center', justifyContent: 'center'}}
+                                        >
+                                            <Ionicons name="close-circle-outline" color={'#ff3333'} />
+                                        </TouchableOpacity>
+                                    </View>
 
-                            <TextInput 
-                            style = {{...globalStyles.input, width: 70, height: 40}}
-                            placeholder='00:00'
-                            placeholderTextColor={colors.placeHolder}
-                            value = {time}
-                            keyboardType='numeric'
-                            maxLength={5}
-                            ></TextInput>
+                                ))
+                            )
+                        }
                         </View>
                     </View>
 
                     <TouchableOpacity style = {styles.addBlockButton}>
-                        <Ionicons name="add-outline" color={colors.placeHolder}></Ionicons>
+                        <Ionicons name="add-outline" color={colors.placeHolder} onPress={() => addTimeSlot()}></Ionicons>
                         <Text style = {styles.addBlockButtonText}>
                             Agregar bloque
                         </Text>
                     </TouchableOpacity>
-
+                    
                 </View>
 
                 <TouchableOpacity style = {{...globalStyles.button, width: 200, alignSelf: 'flex-end'}}>
@@ -232,14 +266,14 @@ const styles = StyleSheet.create({
         paddingLeft: 10,
     },
     dayButtonActive: {
-    backgroundColor: '#007AFF'
+        backgroundColor: '#007AFF'
     },
     dayButtonText: {
-    color: '#555555',
-    fontSize: 14,
-    fontWeight: '600'
+        color: '#555555',
+        fontSize: 14,
+        fontWeight: '600'
     },
     dayButtonTextActive: {
-    color: '#FFFFFF'
+        color: '#FFFFFF'
     },
 })
