@@ -11,20 +11,79 @@ export default function SetSchedule() {
 
     const [time, setTime] = useState('');
 
-    const handleTimeInput = (text: string) => {
-    // Solo números
-    const numbers = text.replace(/[^0-9]/g, '');
-    
-    if (numbers.length > 4) return;
-    
-    // Formato: HH:MM
-    let format = numbers;
-    if (numbers.length >= 3) {
-      format = numbers.slice(0, 2) + ':' + numbers.slice(2);
+    // Para renderizar los botones de los días
+    const dayButtons = ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa', 'Do']
+
+    // Los días en español pq no me los sé en inglés xd
+    type DayKey = 'lunes' | 'martes' | 'miercoles' | 'jueves' | 'viernes' | 'sabado' | 'domingo';
+
+    type TimeSlot = {
+        id: number
+        opening: string
+        closing: string
     }
+
+    type Schedule = {
+        [key in DayKey]: TimeSlot[];
+    }
+
+    const [schedule, setSchedule] = useState<Schedule>({
+        lunes: [],
+        martes: [],
+        miercoles: [],
+        jueves: [],
+        viernes: [],
+        sabado: [],
+        domingo: []
+    })
+
+    const [selectedDay, setSelectedDay] = useState<DayKey>('lunes');
+
+    // Añadir un bloque de horario
+    const addTimeSlot = () => {
+        const newId = Math.max(
+        0,
+        ...schedule[selectedDay].map(s => s.id || 0)
+        ) + 1;
+        
+        setSchedule(prev => ({
+            ...prev,
+            [selectedDay]: [
+                ...prev[selectedDay],
+                {id : newId, opening: '', closing: ''}
+            ]
+        }))
+    }
+
+    // Eliminar un bloque de horario
+    const removeScheduleSlot = (slotId: number) => {
+        setSchedule(prev => ( {
+            ...prev,
+            [selectedDay]: prev[selectedDay].filter(s => s.id !== slotId)
+        }))
+    }
+
+    // Formatear inputs de horas
+    const handleTimeInput = (slotId: number, field: 'opening' | 'closing', text: string) => {
+        const numbers = text.replace(/[^0-9]/g, '')
+        
+        if (numbers.length > 4) return;
+        
+        let formatted = numbers;
+        if (numbers.length >= 3) {
+        formatted = numbers.slice(0, 2) + ':' + numbers.slice(2)
+        }
     
-    setTime(format);
-    };
+        setSchedule(prev => ({
+        ...prev,
+        [selectedDay]: prev[selectedDay].map(slot =>
+            slot.id === slotId
+            ? { ...slot, [field]: formatted }
+            : slot
+        )
+        }))
+    }
+
 
     return (
         // Contenedor padre
@@ -46,27 +105,28 @@ export default function SetSchedule() {
 
                     <View style = {styles.dayButtonsContainer}>
 
-                        <TouchableOpacity style = {styles.dayButton}>
-                            <Text>Lu</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style = {styles.dayButton}>
-                            <Text>Ma</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style = {styles.dayButton}>
-                            <Text>Mi</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style = {styles.dayButton}>
-                            <Text>Ju</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style = {styles.dayButton}>
-                            <Text>Vi</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style = {styles.dayButton}>
-                            <Text>Sa</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style = {styles.dayButton}>
-                            <Text>Do</Text>
-                        </TouchableOpacity>
+                        {dayButtons.map((day, index) => (
+                            <TouchableOpacity
+                            key={day}
+                            style={[
+                                styles.dayButton,
+                                selectedDay === day && styles.dayButtonActive
+                            ]}
+                            onPress = {() => setSelectedDay(day as DayKey)}
+                            >
+
+                                <Text
+                                style = {[
+                                    styles.dayButtonText,
+                                    selectedDay === day && styles.dayButtonTextActive
+                                ]}
+
+                                >
+
+                                </Text>
+
+                            </TouchableOpacity>
+                        ))}
 
                     </View>
                 </View> 
@@ -93,7 +153,6 @@ export default function SetSchedule() {
                             value = {time}
                             keyboardType='numeric'
                             maxLength={5}
-                            onChangeText={handleTimeInput}
                             ></TextInput>
 
                             <Text style = {styles.cardText}>
@@ -107,7 +166,6 @@ export default function SetSchedule() {
                             value = {time}
                             keyboardType='numeric'
                             maxLength={5}
-                            onChangeText={handleTimeInput}
                             ></TextInput>
                         </View>
                     </View>
@@ -145,7 +203,7 @@ const styles = StyleSheet.create({
 
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.7,
+        shadowOpacity: 0.25,
         shadowRadius: 3,
         elevation: 0, 
     },
@@ -172,5 +230,16 @@ const styles = StyleSheet.create({
         fontSize: 14,
         marginVertical: 5,
         paddingLeft: 10,
-    }
+    },
+    dayButtonActive: {
+    backgroundColor: '#007AFF'
+    },
+    dayButtonText: {
+    color: '#555555',
+    fontSize: 14,
+    fontWeight: '600'
+    },
+    dayButtonTextActive: {
+    color: '#FFFFFF'
+    },
 })
