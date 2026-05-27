@@ -1,14 +1,16 @@
-import { colors, globalStyles } from "@/constants/globalStyles";
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { colors, globalStyles } from "../../../constants/globalStyles";
+
 
 export default function ReviewDetailsView () {
-    // id de la review
-    const {review_id} = useLocalSearchParams()
-    // Aquí va la información de la review, me imagino que la conseguirás con la id
-    // Estrellas (calificación), descripción (comentario), id del negocio 
+    // id de la reseña. se obtiene con la id de la reseña a la que se le hizo click en la pantalla de reseñas
+    const {id} = useLocalSearchParams()
+    // Aquí va la información de la review, me imagino que la conseguirás con la id en la base de datos
+    // Datos necesarios: Estrellas, comentario de la reseña, id del negocio.
+    // En este arreglo van a ir los datos reales.
     let review_data =  {business_name: 'Nombre del negocio', stars: 4, description: 'No me gustó, etc comentario...', business_id: 1}
 
     return (
@@ -37,7 +39,8 @@ export default function ReviewDetailsView () {
                                     color = {colors.mainBlue}
                                     size={14}
                                     style = {{marginLeft: 5}}
-                                    />
+                                    >
+                                    </Ionicons>
                                 ))
                             }
                         </View>

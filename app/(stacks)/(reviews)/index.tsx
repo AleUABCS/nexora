@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Link, useRouter } from 'expo-router';
+import { Href, useRouter } from 'expo-router';
 import * as React from "react";
 import { useState } from "react";
 import { FlatList, Text, TouchableOpacity, View } from "react-native";
@@ -8,6 +8,7 @@ import { colors, globalStyles } from "../../../constants/globalStyles";
 const router = useRouter()
 
 export default function ReviewsView () {
+    //Datos de prueba
     const [saved, setSaved] = useState ([
         {id: 0, name: 'Reseña 1', reviewId: '1', stars: 5},
         {id: 1, name: 'Resheña 2', reviewId: '2', stars: 4},
@@ -26,7 +27,6 @@ export default function ReviewsView () {
                 data={saved}
                 keyExtractor={(item => item.id.toString())}
                 renderItem={({item}) => (
-                    <Link href={`/${item.id}`} asChild>
                         <View
                         style = {globalStyles.listItem}
                         >
@@ -35,7 +35,7 @@ export default function ReviewsView () {
                                 justifyContent: 'space-between',
                                 flex: 1
                                 }}
-                                // onPress={() => router.push(``)}
+                                onPress={() => router.push(`/${item.id}` as Href)}
                                 >
                                 <Text style={globalStyles.listItemText}>{item.name}</Text>
                                 <View style = {{flexDirection: 'row'}}>
@@ -53,7 +53,6 @@ export default function ReviewsView () {
                                 </View>
                             </TouchableOpacity>
                         </View>
-                    </Link>
                 )}
                 >
                     <View></View>
