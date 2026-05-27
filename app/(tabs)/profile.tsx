@@ -42,7 +42,7 @@ export default function ProfileScreen() {
               if (item.id === '1') // Guardados
                 router.push('/saved')
               else if (item.id === '2') // Reseñas publicadas
-                router.push('/reviews')
+                router.push('/(stacks)/(reviews)')
             }
           }
           >

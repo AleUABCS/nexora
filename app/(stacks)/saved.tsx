@@ -3,8 +3,10 @@ import * as React from "react";
 import { useState } from "react";
 import { FlatList, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { colors, globalStyles, iconStyles } from "../../constants/globalStyles";
-export default function () {
+import { colors, globalStyles } from "../../constants/globalStyles";
+
+
+export default function SavedView() {
     // const removeSaved = (savedId: number) => {
         
     // }
@@ -21,23 +23,25 @@ export default function () {
 
     return (
         <SafeAreaView style = {globalStyles.mainContainer}> 
-        <View style = {globalStyles.card}>
-            <FlatList
-            data={saved}
-            keyExtractor={(item => item.id.toString())}
-            renderItem={({item}) => (
-                <View
-                style = {globalStyles.listItem}
+        <View style = {globalStyles.secondContainer}>
+            <View style = {globalStyles.card}>
+                <FlatList
+                data={saved}
+                keyExtractor={(item => item.id.toString())}
+                renderItem={({item}) => (
+                    <View
+                    style = {globalStyles.listItem}
+                    >
+                        <Text style={globalStyles.listItemText}>{item.name}</Text>
+                        <TouchableOpacity onPress={() => removeSaved(item.id)}>
+                            <Ionicons name="close-circle-outline" size={24} style={{color: colors.warn}}></Ionicons>
+                        </TouchableOpacity>
+                    </View>
+                )}
                 >
-                    <Text style={globalStyles.listItemText}>{item.name}</Text>
-                    <TouchableOpacity style = {globalStyles.listItem} onPress={() => removeSaved(item.id)}>
-                        <Ionicons name="close-circle-outline" style={{...iconStyles.listIcon, color: colors.warn}}></Ionicons>
-                    </TouchableOpacity>
-                </View>
-            )}
-            >
-                <View></View>
-            </FlatList>
+                    <View></View>
+                </FlatList>
+            </View>
         </View>
     </SafeAreaView>
     )

@@ -15,6 +15,14 @@ export default function StackLayout () {
         name="set-schedule" 
         options={{ headerShown: false }} 
       />
+      <Stack.Screen 
+        name="saved" 
+        options={{ headerShown: false }} 
+      />
+      <Stack.Screen 
+        name="(reviews)" 
+        options={{ headerShown: false }} 
+      />
     </Stack>
   );
 }
