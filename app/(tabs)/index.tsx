@@ -1,8 +1,10 @@
 import { FontAwesome5, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { collection, getDocs, getFirestore } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import {
   FlatList,
+  Pressable,
   StyleSheet,
   Text,
   TextInput,
@@ -24,6 +26,9 @@ const CATEGORIES = [
 ];
 
 export default function HomeScreen() {
+  const router = useRouter()
+  let selected_business_id = 1
+
   const [negocios, setNegocios] = useState<any[]>([]);
 
   useEffect(() => {
@@ -60,12 +65,14 @@ export default function HomeScreen() {
 
   const renderBusiness = ({ item }: { item: any }) => {
     return (
-      <View style={styles.businessCard}>
-        <Text style={styles.businessName}>{item.nombreNegocio || item.nombre}</Text>
-        <Text style={styles.businessDetail}>Descripción: {item.descripcion}</Text>
-        <Text style={styles.businessDetail}>Teléfono: {item.telefonoNegocio}</Text>
-        <Text style={styles.businessDetail}>Email: {item.emailNegocio}</Text>
-      </View>
+      <Pressable onPress = {() => router.push(`/(stacks)${selected_business_id}`)}>
+        <View style={styles.businessCard}>
+          <Text style={styles.businessName}>{item.nombreNegocio || item.nombre}</Text>
+          <Text style={styles.businessDetail}>Descripción: {item.descripcion}</Text>
+          <Text style={styles.businessDetail}>Teléfono: {item.telefonoNegocio}</Text>
+          <Text style={styles.businessDetail}>Email: {item.emailNegocio}</Text>
+        </View>
+      </Pressable>
     );
   };
 

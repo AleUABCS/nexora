@@ -23,6 +23,10 @@ export default function StackLayout () {
         name="(reviews)" 
         options={{ headerShown: false }} 
       />
+      <Stack.Screen 
+        name="[business-id]" 
+        options={{ headerShown: false }} 
+      />
     </Stack>
   );
 }

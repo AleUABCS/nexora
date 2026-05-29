@@ -1,7 +1,7 @@
 import { StyleSheet } from "react-native"
 export const colors = {
     placeHolder: "#A1A1A1",
-    warn: "#ffc73b",
+    warn: "#FFA600",
     mainBlue: "#0056D2",
     regularText: "#555555"
 }
@@ -56,9 +56,12 @@ export const globalStyles = StyleSheet.create({
     button: {
         backgroundColor: '#0056D2', 
         borderRadius: 12,
-        paddingVertical: 16,
+        paddingVertical: 10,
+        justifyContent: 'center',
         alignItems: 'center',
         marginTop: 10,
+        paddingHorizontal: 15,
+        flexDirection: 'row'
     },
     buttonText: {
         color: '#FFFFFF',
