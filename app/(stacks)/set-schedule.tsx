@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Keyboard, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, globalStyles } from '../../constants/globalStyles';
 
@@ -9,9 +10,22 @@ export default function SetSchedule() {
 
     const [time, setTime] = useState('');
 
-    // Para renderizar los botones de los días
-    const dayButtons = ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa', 'Do']
+    const saveSchedule = () => {
+        // Aquí se tiene que guardar el horario en back
+        
+        router.back()
+    }
 
+    // Para renderizar los botones de los días
+    const dayButtons: { label: string; key: DayKey }[] = [
+        { label: 'Lu', key: 'lunes' },
+        { label: 'Ma', key: 'martes' },
+        { label: 'Mi', key: 'miercoles' },
+        { label: 'Ju', key: 'jueves' },
+        { label: 'Vi', key: 'viernes' },
+        { label: 'Sa', key: 'sabado' },
+        { label: 'Do', key: 'domingo' },
+    ];
     // Los días en español pq no me los sé en inglés xd
     type DayKey = 'lunes' | 'martes' | 'miercoles' | 'jueves' | 'viernes' | 'sabado' | 'domingo';
 
@@ -85,142 +99,148 @@ export default function SetSchedule() {
 
     return (
         // Contenedor padre
-        
-        <SafeAreaView style={globalStyles.mainContainer}>
-            {/* Título: Horario */}
-            <Text style = {globalStyles.titleText}>Horario</Text>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <SafeAreaView style={globalStyles.mainContainer}>
+                {/* Título: Horario */}
+                <Text style = {globalStyles.titleText}>Horario</Text>
 
-            <View style={globalStyles.secondContainer}>
+                <View style={globalStyles.secondContainer}>
 
-                {/* Tarjeta de los días */}
-                <View style = {globalStyles.card}>
+                    {/* Tarjeta de los días */}
+                    <View style = {globalStyles.card}>
 
-                    <Text style = {{...styles.cardText, alignSelf: 'center'}}>
-                        Días
-                    </Text>
+                        <Text style = {{...styles.cardText, alignSelf: 'center'}}>
+                            Días
+                        </Text>
 
-                    <View style = {globalStyles.horizontalLine}></View>
+                        <View style = {globalStyles.horizontalLine}></View>
 
-                    <View style = {styles.dayButtonsContainer}>
+                        <View style = {styles.dayButtonsContainer}>
 
-                        {/* Renderizar los botones de los días */}
-                        {dayButtons.map((day, index) => (
-                            <TouchableOpacity
-                                key={day}
-                                style={[
-                                    styles.dayButton,
-                                    selectedDay === day && styles.dayButtonActive
-                                ]}
-                                onPress = {() => setSelectedDay(day as DayKey)}
-                                >
-
-                                    <Text
-                                    style = {[
-                                        styles.dayButtonText,
-                                        selectedDay === day && styles.dayButtonTextActive
+                            {/* Renderizar los botones de los días */}
+                            {dayButtons.map(({ label, key }) => (
+                                <TouchableOpacity
+                                    key={key}
+                                    style={[
+                                        styles.dayButton,
+                                        selectedDay === key && styles.dayButtonActive
                                     ]}
-                                    onPress = {() => setSelectedDay(day as DayKey)}
-                                    >
-                                    {dayButtons[index]}
-                                    </Text>
-
-                            </TouchableOpacity>
-                        ))}
-
-                    </View>
-                </View> 
-                {/* Tarjeta de horario (cambia por cada día con los botones de Días) */}
-                <View style = {globalStyles.card}>  
-
-                    <Text style = {{...styles.cardText, alignSelf: 'center'}}>
-                        Horario
-                    </Text>
-                   
-                    <View style = {globalStyles.horizontalLine}></View>
-
-                    {/* Bloque de horario */}
-                    <View>
-                        <View style = {{flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center'}}>
-                        
-                            {schedule[selectedDay].length === 0 ? (
-                                <Text
-                                    style = {{
-                                        ...styles.cardText,
-                                        marginVertical: 20,
-                                        color: colors.placeHolder,
-                                        textAlign: 'center'
-                                    }}
+                                    onPress={() => setSelectedDay(key)}
                                 >
-                                    Sin horarios configurados
-                                </Text>
-                            ) :  (
-                                schedule[selectedDay].map((slot, index) => (
-                                    <View 
-                                    style = {{
-                                        flexDirection: 'row',
-                                        justifyContent: 'space-around',
-                                        alignItems: 'center',
-                                    }}
+                                    <Text
+                                        style={[
+                                            styles.dayButtonText,
+                                            selectedDay === key && styles.dayButtonTextActive
+                                        ]}
                                     >
-                                        <Text style = {styles.cardText}>
-                                            Bloque {index + 1}
-                                        </Text>
-                                        
-                                        <TextInput
-                                        style = {{...globalStyles.input, width: 70, height: 40}}
-                                        placeholder='00:00'
-                                        placeholderTextColor={colors.placeHolder}
-                                        value={slot.opening}
-                                        onChangeText={(text) => handleTimeInput(slot.id, 'opening', text)}
-                                        keyboardType='numeric'
-                                        maxLength={5}
-                                        />
-                                        
-                                        <Text style = {styles.cardText}>
-                                            a
-                                        </Text>
-
-                                        <TextInput
-                                        style = {{...globalStyles.input, width: 70, height: 40}}
-                                        placeholder='00:00'
-                                        placeholderTextColor={colors.placeHolder}
-                                        value={slot.closing}
-                                        onChangeText={(text) => handleTimeInput(slot.id, 'closing', text)}
-                                        keyboardType='numeric'
-                                        maxLength={5}
-                                        />
-
-                                        <TouchableOpacity
-                                        onPress={() => removeScheduleSlot(index)}
-                                        style = {{width: 32, height: 32, alignItems: 'center', justifyContent: 'center'}}
-                                        >
-                                            <Ionicons name="close-circle-outline" color={'#ff3333'} />
-                                        </TouchableOpacity>
-                                    </View>
-
-                                ))
-                            )
-                        }
+                                        {label}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}                    
                         </View>
+                    </View> 
+                    {/* Tarjeta de horario (cambia por cada día con los botones de Días) */}
+                    <View style = {globalStyles.card}>  
+
+                        <Text style = {{...styles.cardText, alignSelf: 'center'}}>
+                            Horario
+                        </Text>
+                    
+                        <View style = {globalStyles.horizontalLine}></View>
+
+                        {/* Bloque de horario */}
+                        <View>
+                            <View style = {{justifyContent: 'space-around', alignItems: 'center'}}>
+                            
+                                {schedule[selectedDay].length === 0 ? (
+                                    <Text
+                                        style = {{
+                                            ...styles.cardText,
+                                            marginVertical: 20,
+                                            color: colors.placeHolder,
+                                            textAlign: 'center'
+                                        }}
+                                    >
+                                        Sin horarios configurados
+                                    </Text>
+                                ) :  (
+                                    schedule[selectedDay].map((slot, index) => (
+                                            <View 
+                                                style = {{
+                                                    flexDirection: 'row',
+                                                    justifyContent: 'space-between',
+                                                    alignItems: 'center',
+                                                    width: '100%',
+                                                    marginTop: 15,
+                                                }}
+                                                key = {slot.id}
+                                            >
+                                                <Text style = {styles.cardText}>
+                                                    Bloque {index + 1}
+                                                </Text>
+                                                
+                                                <TextInput
+                                                style = {{...globalStyles.input, width: 70, height: 40}}
+                                                placeholder='00:00'
+                                                placeholderTextColor={colors.placeHolder}
+                                                value={slot.opening}
+                                                onChangeText={(text) => handleTimeInput(slot.id, 'opening', text)}
+                                                keyboardType='numeric'
+                                                maxLength={5}
+                                                />
+                                                
+                                                <Text style = {styles.cardText}>
+                                                    a
+                                                </Text>
+
+                                                <TextInput
+                                                style = {{...globalStyles.input, width: 70, height: 40}}
+                                                placeholder='00:00'
+                                                placeholderTextColor={colors.placeHolder}
+                                                value={slot.closing}
+                                                onChangeText={(text) => handleTimeInput(slot.id, 'closing', text)}
+                                                keyboardType='numeric'
+                                                maxLength={5}
+                                                />
+
+                                                <TouchableOpacity
+                                                onPress={() => removeScheduleSlot(slot.id)}
+                                                style = {{width: 32, height: 32, alignItems: 'center', justifyContent: 'center'}}
+                                                >
+                                                    <Ionicons name="close-circle-outline" color={'#ff3333'} size={24} />
+                                                </TouchableOpacity>
+                                            </View>
+                                    )))
+                                }
+                            </View>
+                        </View>
+
+                        <TouchableOpacity 
+                        style = {styles.addBlockButton}
+                        onPress={() => addTimeSlot()}
+                        >
+                            <Ionicons name="add-outline" color={colors.placeHolder}></Ionicons>
+                            <Text style = {styles.addBlockButtonText}>
+                                Agregar bloque
+                            </Text>
+                        </TouchableOpacity>
+                        
                     </View>
 
-                    <TouchableOpacity style = {styles.addBlockButton}>
-                        <Ionicons name="add-outline" color={colors.placeHolder} onPress={() => addTimeSlot()}></Ionicons>
-                        <Text style = {styles.addBlockButtonText}>
-                            Agregar bloque
+                    <TouchableOpacity 
+                        style = {{
+                            ...globalStyles.button, width: 200, alignSelf: 'flex-end'
+                        }}
+                        onPress={saveSchedule}
+                    >
+                        <Text style  = {globalStyles.buttonText}>
+                            Guardar horario
                         </Text>
                     </TouchableOpacity>
-                    
+
                 </View>
-
-                <TouchableOpacity style = {{...globalStyles.button, width: 200, alignSelf: 'flex-end'}}>
-                    <Text style  = {globalStyles.buttonText}>
-                        Guardar horario
-                    </Text>
-                </TouchableOpacity>
-
-            </View>
-        </SafeAreaView>
+            </SafeAreaView>
+        </TouchableWithoutFeedback>
     )
 }
 
@@ -257,7 +277,8 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#B5B5B5',
         borderRadius: 10,
-        flexDirection: 'row'
+        flexDirection: 'row',
+        height: 50,
     },
     addBlockButtonText: {
         color: '#A1A1A1',

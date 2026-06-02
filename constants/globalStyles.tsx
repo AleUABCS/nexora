@@ -3,7 +3,9 @@ export const colors = {
     placeHolder: "#A1A1A1",
     warn: "#FFA600",
     mainBlue: "#0056D2",
-    regularText: "#555555"
+    regularText: "#656565",
+    secondaryBlue: "#E7EEFF",
+    promotion: "#3900BF"
 }
 
 export const iconStyles = {
@@ -47,8 +49,8 @@ export const globalStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E5E5E5',
     borderRadius: 20,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
+    paddingVertical: 0,
+    paddingHorizontal: 6,
     fontSize: 15,
     color: '#000',
     backgroundColor: '#FAFAFA',
