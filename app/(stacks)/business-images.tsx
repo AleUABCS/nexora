@@ -1,7 +1,8 @@
 import { globalStyles } from "@/constants/globalStyles";
+import { router } from "expo-router";
 import { FlatList, Image, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useBusinessStore } from "../../store/business-store";
+import { pickImages, useBusinessStore } from "../../store/business-store";
 
 export default function BusinessImagesScreen() {
   const { images, addImage, removeImage } = useBusinessStore();
@@ -16,7 +17,7 @@ export default function BusinessImagesScreen() {
             data={images}
             numColumns={3}
             keyExtractor={(item, index) => index.toString()}
-            contentContainerStyle = {{flexWrap: 'wrap', flexDirection: "column"}}
+            contentContainerStyle = {{flexDirection: "column"}}
             renderItem={({ item }) => (
               <View style={{ position: "relative", margin: 5}}>
                 <Image
@@ -39,6 +40,30 @@ export default function BusinessImagesScreen() {
               </View>
             )}
           />
+        </View>
+
+        <View style = {{
+            flexDirection: 'row', 
+            justifyContent: 'flex-end'
+          }}
+          >
+
+          <TouchableOpacity style ={{
+            ...globalStyles.button}}
+            onPress={ () => pickImages() }
+          >
+            <Text style = {globalStyles.buttonText} >Añadir fotos</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+          style = {{
+            ...globalStyles.button, 
+            marginLeft: 20
+          }}
+          onPress = {() => router.back()}
+          >
+            <Text style = {globalStyles.buttonText}>Guardar</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>

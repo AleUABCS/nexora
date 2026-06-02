@@ -1,9 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
-import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { getAuth } from "firebase/auth";
 import { addDoc, collection, getFirestore } from "firebase/firestore";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Alert,
   Dimensions,
@@ -22,7 +21,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Select, { ISelectItem } from "rn-custom-select-dropdown";
 import appFirebase from "../../credenciales.js";
-import { useBusinessStore } from "../../store/business-store";
+import { pickImages, useBusinessStore } from "../../store/business-store";
 
 const auth = getAuth(appFirebase);
 const db = getFirestore(appFirebase);
@@ -54,6 +53,26 @@ export default function RegisterBusinessScreen() {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   const location = null; // Backend: Obtener ubicación del usuario
+
+  const validateFields = async () => {
+    if (
+      nameBusiness === "" ||
+      description === "" ||
+      phone === "" ||
+      email === "" ||
+      selectedValue === null
+    ) {
+      return 0
+    }
+    if (!regex.test(phone)) {
+      return 0
+    }
+    if (!emailRegex.test(email)) {
+      return 0
+    }
+
+    return 1
+  }
 
   const handleRegisterBusiness = async () => {
     const usuarioActual = auth.currentUser;
@@ -100,9 +119,9 @@ export default function RegisterBusinessScreen() {
   };
 
   // Funciones de business-store para guardar la url de las imágenes y pasarlas entre pantallas
-  const { addImage, images, setImages } = useBusinessStore();
+  const { addImage, images, setImages, clearImages } = useBusinessStore();
 
-  const askForIamges = () => {
+  const askForImages = () => {
     if (images.length > 0) {
       router.push("/business-images");
     } else {
@@ -110,31 +129,11 @@ export default function RegisterBusinessScreen() {
     }
   };
 
-  const pickImages = async () => {
-    const permissionResult =
-      await ImagePicker.requestMediaLibraryPermissionsAsync();
+  const [preview, setPreview] = useState(images[0])
 
-    if (!permissionResult.granted) {
-      Alert.alert(
-        "Sin permisos",
-        "Se requieren permisos para acceder a la galería",
-      );
-      return;
-    }
-
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"],
-      allowsMultipleSelection: true,
-      quality: 1,
-    });
-
-    console.log(result);
-
-    if (!result.canceled) {
-      const uris = result.assets.map((asset) => asset.uri);
-      setImages(uris);
-    }
-  };
+  useEffect(() => {
+    if (images[0]) setPreview(images[0])
+  })
 
   return (
     <SafeAreaView style={{ ...styles.mainContainer }}>
@@ -158,10 +157,12 @@ export default function RegisterBusinessScreen() {
 
           <View style={styles.card}>
             {/* Contenedor de imagen y botón para subir imagen */}
-            {/* Falta back */}
             <View style={styles.setImageContainer}>
               <Image
-                source={require("../../assets/images/placeholder-image.jpg")}
+                source={
+                  !images[0] ? require("../../assets/images/placeholder-image.jpg")
+                  : {uri: preview}
+                }
                 style={styles.image}
               />
               <TouchableOpacity
@@ -172,7 +173,7 @@ export default function RegisterBusinessScreen() {
                   justifyContent: "center",
                   alignItems: "center",
                 }}
-                onPress={() => askForIamges()}
+                onPress={() => askForImages()}
               >
                 <Ionicons
                   name="images-outline"
@@ -329,7 +330,10 @@ export default function RegisterBusinessScreen() {
 
             <TouchableOpacity
               style={styles.button}
-              onPress={handleRegisterBusiness}
+              onPress={ async () => {
+                handleRegisterBusiness()
+                if (await validateFields() == 1) clearImages()
+              }}
             >
               <Text style={styles.buttonText}>Publicar negocio</Text>
             </TouchableOpacity>
