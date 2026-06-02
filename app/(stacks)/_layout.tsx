@@ -24,6 +24,10 @@ export default function StackLayout () {
         name="[business-id]" 
         options={{ headerShown: false }} 
       />
+      <Stack.Screen 
+        name="business-images" 
+        options={{ headerShown: false }} 
+      />
     </Stack>
   );
 }

@@ -40,7 +40,7 @@ const categories: Array<ISelectItem<string>> = [
   { label: "Veterinarias", value: "Veterinarias" },
 ];
 
-export default function registerBusinessScreen() {
+export default function RegisterBusinessScreen() {
   const [nameBusiness, setNameBusiness] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -103,7 +103,7 @@ export default function registerBusinessScreen() {
   const { addImage, images, setImages } = useBusinessStore();
 
   const askForIamges = () => {
-    if (images) {
+    if (images.length > 0) {
       router.push("/business-images");
     } else {
       pickImages();

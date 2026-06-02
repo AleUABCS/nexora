@@ -11,13 +11,14 @@ export default function BusinessImagesScreen() {
       <View style={globalStyles.secondContainer}>
         <Text style={globalStyles.titleText}>Fotos</Text>
 
-        <View style={globalStyles.card}>
+        <View style={{...globalStyles.card, height: 500, marginTop: 20}}>
           <FlatList
             data={images}
-            horizontal
+            numColumns={3}
             keyExtractor={(item, index) => index.toString()}
+            contentContainerStyle = {{flexWrap: 'wrap', flexDirection: "column"}}
             renderItem={({ item }) => (
-              <View style={{ position: "relative", margin: 5 }}>
+              <View style={{ position: "relative", margin: 5}}>
                 <Image
                   source={{ uri: item }}
                   style={{ width: 100, height: 100, borderRadius: 8 }}
