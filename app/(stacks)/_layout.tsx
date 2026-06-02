@@ -7,10 +7,7 @@ export default function StackLayout () {
         name="add-business" 
         options={{ headerShown: false }} 
       />
-      <Stack.Screen 
-        name="business" 
-        options={{ headerShown: false }} 
-      />
+      
       <Stack.Screen 
         name="set-schedule" 
         options={{ headerShown: false }} 

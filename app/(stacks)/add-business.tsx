@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import * as ImagePicker from 'expo-image-picker';
+import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { getAuth } from "firebase/auth";
 import { addDoc, collection, getFirestore } from "firebase/firestore";
@@ -22,24 +22,22 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Select, { ISelectItem } from "rn-custom-select-dropdown";
 import appFirebase from "../../credenciales.js";
-import { useBusinessStore } from '../store/business-store';
+import { useBusinessStore } from "../../store/business-store";
 
 const auth = getAuth(appFirebase);
 const db = getFirestore(appFirebase);
 const width = Dimensions.get("window").width;
 const categories: Array<ISelectItem<string>> = [
-  {
-    label: "Farmacias",
-    value: "Farmacias",
-  },
-  {
-    label: "Peluquerias",
-    value: "Peluquerias",
-  },
-  {
-    label: "Restaurantes",
-    value: "Restaurantes",
-  },
+  { label: "Abarrotes y Tienditas", value: "Abarrotes y Tienditas" },
+  { label: "Barberías", value: "Barberías" },
+  { label: "Cafeterías", value: "Cafeterías" },
+  { label: "Farmacias", value: "Farmacias" },
+  { label: "Ferreterías", value: "Ferreterías" },
+  { label: "Gimnasios", value: "Gimnasios" },
+  { label: "Mecánicos y Talleres", value: "Mecánicos y Talleres" },
+  { label: "Pizzerías", value: "Pizzerías" },
+  { label: "Purificadoras", value: "Purificadoras" },
+  { label: "Veterinarias", value: "Veterinarias" },
 ];
 
 export default function registerBusinessScreen() {
@@ -60,19 +58,25 @@ export default function registerBusinessScreen() {
   const handleRegisterBusiness = async () => {
     const usuarioActual = auth.currentUser;
     if (!usuarioActual) {
-      Alert.alert('Aviso', 'Usuario no logueado');
+      Alert.alert("Aviso", "Usuario no logueado");
       return;
     }
-    if (nameBusiness === '' || description === '' || phone === '' || email === '') {
-      Alert.alert('Aviso', 'Por favor llena todos los campos');
+    if (
+      nameBusiness === "" ||
+      description === "" ||
+      phone === "" ||
+      email === "" ||
+      selectedValue === null
+    ) {
+      Alert.alert("Aviso", "Por favor llena todos los campos");
       return;
     }
     if (!regex.test(phone)) {
-      Alert.alert('Aviso', 'El numero no es valido');
+      Alert.alert("Aviso", "El numero no es valido");
       return;
     }
     if (!emailRegex.test(email)) {
-      Alert.alert('Aviso', 'El email no es valido');
+      Alert.alert("Aviso", "El email no es valido");
       return;
     }
 
@@ -81,60 +85,61 @@ export default function registerBusinessScreen() {
         nombreNegocio: nameBusiness,
         userId: usuarioActual.uid,
         descripcion: description,
+        categoriaNegocio: selectedValue!.value,
         telefonoNegocio: phone,
         emailNegocio: email,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
       await addDoc(collection(db, "negocios"), newBusiness);
 
-      Alert.alert('Éxito', 'Negocio registrado');
+      Alert.alert("Éxito", "Negocio registrado");
       router.back();
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
   };
 
   // Funciones de business-store para guardar la url de las imágenes y pasarlas entre pantallas
-  const { addImage, images, setImages } = useBusinessStore()
+  const { addImage, images, setImages } = useBusinessStore();
 
   const askForIamges = () => {
     if (images) {
-      router.push('/business-images')
+      router.push("/business-images");
     } else {
-      pickImages()
+      pickImages();
     }
-  }
-
-
+  };
 
   const pickImages = async () => {
-
-  const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync()
+    const permissionResult =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (!permissionResult.granted) {
-        Alert.alert('Sin permisos', 'Se requieren permisos para acceder a la galería')
-        return;
+      Alert.alert(
+        "Sin permisos",
+        "Se requieren permisos para acceder a la galería",
+      );
+      return;
     }
 
     let result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'],
-        allowsMultipleSelection: true,
-        quality: 1,
+      mediaTypes: ["images"],
+      allowsMultipleSelection: true,
+      quality: 1,
     });
 
-    console.log(result)
+    console.log(result);
 
     if (!result.canceled) {
-        const uris = result.assets.map(asset => asset.uri)
-        setImages(uris)
+      const uris = result.assets.map((asset) => asset.uri);
+      setImages(uris);
     }
-
-  }
+  };
 
   return (
     <SafeAreaView style={{ ...styles.mainContainer }}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.mainContainer}
       >
         <ScrollView
@@ -145,7 +150,6 @@ export default function registerBusinessScreen() {
           scrollEventThrottle={16}
           nestedScrollEnabled={true}
         >
-
           {/* Aquí inicia el contenido */}
           {/* Título de la pantalla */}
           <View style={styles.headerContainer}>
@@ -153,23 +157,32 @@ export default function registerBusinessScreen() {
           </View>
 
           <View style={styles.card}>
-
             {/* Contenedor de imagen y botón para subir imagen */}
             {/* Falta back */}
             <View style={styles.setImageContainer}>
-              <Image source={require('../../assets/images/placeholder-image.jpg')} style={styles.image} />
+              <Image
+                source={require("../../assets/images/placeholder-image.jpg")}
+                style={styles.image}
+              />
               <TouchableOpacity
                 style={{
                   ...styles.button,
-                  width: width * 0.4, 
-                  flexDirection: 'row', 
-                  justifyContent: 'center', 
-                  alignItems: 'center'
+                  width: width * 0.4,
+                  flexDirection: "row",
+                  justifyContent: "center",
+                  alignItems: "center",
                 }}
                 onPress={() => askForIamges()}
-                >
-                <Ionicons name="images-outline" size={24} color="#ffffff" marginRight={10} />
-                <Text style={{ ...styles.buttonText, fontSize: 14 }}>Fotos</Text>
+              >
+                <Ionicons
+                  name="images-outline"
+                  size={24}
+                  color="#ffffff"
+                  marginRight={10}
+                />
+                <Text style={{ ...styles.buttonText, fontSize: 14 }}>
+                  Fotos
+                </Text>
               </TouchableOpacity>
             </View>
 
@@ -209,7 +222,6 @@ export default function registerBusinessScreen() {
                     backgroundColor: "#FAFAFA",
                   }}
                   placeholderStyle={{
-                    
                     color: "#505050",
                   }}
                   dropdownItemStyle={{

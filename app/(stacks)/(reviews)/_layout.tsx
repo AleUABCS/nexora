@@ -11,10 +11,6 @@ export default function ReviewsLayout() {
         name="[id]" 
         options={{ headerShown: false }} 
       />
-      <Stack.Screen 
-        name="prueba" 
-        options={{ headerShown: false }} 
-      />
     </Stack>
   );
 }
