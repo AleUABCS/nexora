@@ -12,7 +12,7 @@ const auth = getAuth(appFirebase);
 const db = getFirestore(appFirebase);
 
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { Href, useRouter } from "expo-router";
 import {
   Pressable,
   ScrollView,
@@ -73,7 +73,7 @@ export default function BusinessScreen() {
               <Text style={styles.businessName}>{negocio.nombreNegocio}</Text>
 
               <View style={styles.actionsContainer}>
-                <TouchableOpacity style={styles.actionButton}>
+                <TouchableOpacity style={styles.actionButton} onPress={ () => router.push(`../(stacks)/(dashboard)/${'hola'}` as Href)}>
                   <Ionicons name="trending-up" size={18} color="#FFFFFF" />
                 </TouchableOpacity>
 

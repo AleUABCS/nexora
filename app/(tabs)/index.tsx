@@ -5,7 +5,6 @@ import { collection, getDocs, getFirestore } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 
 import {
-
   FlatList,
 
   StyleSheet,
@@ -17,11 +16,11 @@ import {
   TouchableOpacity,
 
   View
-
 } from 'react-native';
 
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { router } from 'expo-router';
 import appFirebase from '../../credenciales.js';
 
 
@@ -167,20 +166,21 @@ export default function HomeScreen() {
   const renderBusiness = ({ item }: { item: any }) => {
 
     return (
+      <TouchableOpacity onPress = { () => router.push(`../(stacks)${'id del negocio'}`)}>
+        <View style={styles.businessCard}>
 
-      <View style={styles.businessCard}>
+          <Text style={styles.businessName}>{item.nombreNegocio || item.nombre}</Text>
 
-        <Text style={styles.businessName}>{item.nombreNegocio || item.nombre}</Text>
+          <Text style={styles.businessDetail}>Categoría: {item.categoriaNegocio || 'Sin categoría'}</Text>
 
-        <Text style={styles.businessDetail}>Categoría: {item.categoriaNegocio || 'Sin categoría'}</Text>
+          <Text style={styles.businessDetail}>Descripción: {item.descripcion}</Text>
 
-        <Text style={styles.businessDetail}>Descripción: {item.descripcion}</Text>
+          <Text style={styles.businessDetail}>Teléfono: {item.telefonoNegocio}</Text>
 
-        <Text style={styles.businessDetail}>Teléfono: {item.telefonoNegocio}</Text>
+          <Text style={styles.businessDetail}>Email: {item.emailNegocio}</Text>
 
-        <Text style={styles.businessDetail}>Email: {item.emailNegocio}</Text>
-
-      </View>
+        </View>
+      </TouchableOpacity>
 
     );
 

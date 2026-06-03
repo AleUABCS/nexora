@@ -44,6 +44,7 @@ export const globalStyles = StyleSheet.create({
         fontSize: 38,
         alignSelf: 'center',
         marginTop: 20,
+        textAlign: 'center',
     },
     input: {
     borderWidth: 1,

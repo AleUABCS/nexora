@@ -1,59 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useLocalSearchParams } from "expo-router";
 import * as React from "react";
 import { Dimensions, FlatList, Image, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Text } from '../../components/Themed';
 import { colors, globalStyles } from "../../constants/globalStyles";
-
-// Reemplazar esta información con la real
-const business_data = {
-    info: {
-        business_id: 1,
-        name: 'Nombre del negocio',
-        rate: 4.5,
-        reviews: 3,
-        description: 'Descripción del negocio, texto de ejemplo, etétera',
-        email: 'correo@ejemplo.com',
-        phone: '6131231234',
-    },
-    coordinates: { // Coordenadas en latitud y longitud 
-        latitude: 24.1426,
-        longitude: -110.3128
-    },
-    promotions: [ // Promociones con id y su nombre
-        {id: 1, promotion_name: 'Nombre de la promoción 1'},
-        {id: 2, promotion_name: 'Nombre de la promociódsaddasdasasdasdadsadasdsdssdsan dos'}
-    ],
-    images: [
-        { id: '1', source: require('../../assets/images/cuyo1.jpg') },
-        { id: '2', source: require('../../assets/images/cuyo2.jpg') },
-        { id: '3', source: require('../../assets/images/cuyo3.jpg') },
-    ],
-    shedule: { // Horario
-        lunes: [
-            {open: '07:00', close: '12:00'},
-            {open: '01:00', close: '18:00'}
-        ],
-        martes: [
-            {open: '07:00', close: '12:00'},
-        ],
-        miercoles: [
-            {open: '07:00', close: '12:00'},
-        ],
-        jueves: [
-            {open: '07:00', close: '12:00'},
-        ],
-        viernes: [
-            {open: '07:00', close: '12:00'},
-        ],
-        sabado: [
-            {open: '07:00', close: '12:00'},
-        ],
-        domingo: [
-            {open: '07:00', close: '12:00'},
-        ]
-    }
-}
 
 const width = Dimensions.get("window").width;
 const height = Dimensions.get("window").height;
@@ -61,6 +12,59 @@ const height = Dimensions.get("window").height;
 const container_width = width;
 const space = 10;
 export default function BusinessView () {
+    const { 'business-id' : business_id } = useLocalSearchParams()
+    console.log(business_id)
+
+    // Reemplazar esta información con la real
+    const business_data = {
+        info: {
+            business_id: business_id,
+            name: 'Nombre del negocio',
+            rate: 4.5,
+            reviews: 3,
+            description: 'Descripción del negocio, texto de ejemplo, etétera',
+            email: 'correo@ejemplo.com',
+            phone: '6131231234',
+        },
+        coordinates: { // Coordenadas en latitud y longitud 
+            latitude: 24.1426,
+            longitude: -110.3128
+        },
+        promotions: [ // Promociones con id y su nombre
+            {id: 1, promotion_name: 'Nombre de la promoción 1'},
+            {id: 2, promotion_name: 'Nombre de la promociódsaddasdasasdasdadsadasdsdssdsan dos'}
+        ],
+        images: [
+            { id: '1', source: require('../../assets/images/cuyo1.jpg') },
+            { id: '2', source: require('../../assets/images/cuyo2.jpg') },
+            { id: '3', source: require('../../assets/images/cuyo3.jpg') },
+        ],
+        shedule: { // Horario
+            lunes: [
+                {open: '07:00', close: '12:00'},
+                {open: '01:00', close: '18:00'}
+            ],
+            martes: [
+                {open: '07:00', close: '12:00'},
+            ],
+            miercoles: [
+                {open: '07:00', close: '12:00'},
+            ],
+            jueves: [
+                {open: '07:00', close: '12:00'},
+            ],
+            viernes: [
+                {open: '07:00', close: '12:00'},
+            ],
+            sabado: [
+                {open: '07:00', close: '12:00'},
+            ],
+            domingo: [
+                {open: '07:00', close: '12:00'},
+            ]
+        }
+    }
+
     return (
         <SafeAreaView style = {globalStyles.mainContainer}> 
             <ScrollView>
