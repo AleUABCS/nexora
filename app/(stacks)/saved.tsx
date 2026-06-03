@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import * as React from "react";
 import { useState } from "react";
 import { FlatList, Text, TouchableOpacity, View } from "react-native";
@@ -24,6 +25,7 @@ export default function SavedView() {
     return (
         <SafeAreaView style = {globalStyles.mainContainer}> 
         <View style = {globalStyles.secondContainer}>
+            <Text style = {{...globalStyles.titleText, marginTop: 50}}>Guardados</Text>
             <View style = {globalStyles.card}>
                 <FlatList
                 data={saved}
@@ -32,7 +34,9 @@ export default function SavedView() {
                     <View
                     style = {globalStyles.listItem}
                     >
-                        <Text style={globalStyles.listItemText}>{item.name}</Text>
+                        <TouchableOpacity style = {{width: '80%'}} onPress={() => router.push(`/${item.businessId}`)}>
+                            <Text style={globalStyles.listItemText}>{item.name}</Text>
+                        </TouchableOpacity>
                         <TouchableOpacity onPress={() => removeSaved(item.id)}>
                             <Ionicons name="close-circle-outline" size={24} style={{color: colors.warn}}></Ionicons>
                         </TouchableOpacity>

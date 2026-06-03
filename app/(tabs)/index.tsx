@@ -166,7 +166,7 @@ export default function HomeScreen() {
   const renderBusiness = ({ item }: { item: any }) => {
 
     return (
-      <TouchableOpacity onPress = { () => router.push(`../(stacks)${'id del negocio'}`)}>
+      <TouchableOpacity onPress = { () => router.push(`/(stacks)/(business)/${'id del negocio'}`)}>
         <View style={styles.businessCard}>
 
           <Text style={styles.businessName}>{item.nombreNegocio || item.nombre}</Text>

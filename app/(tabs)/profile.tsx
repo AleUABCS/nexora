@@ -1,11 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { router } from 'expo-router';
 import { getAuth, signOut } from 'firebase/auth';
 import React from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import appFirebase from '../../credenciales.js';
-
-const router = useRouter();
 
 const auth = getAuth(appFirebase);
 
@@ -16,6 +14,7 @@ export default function ProfileScreen() {
     { id: '2', title: 'Reseñas publicadas', icon: 'star-outline' },
     { id: '3', title: 'Citas agendadas', icon: 'calendar-outline' },
     { id: '4', title: 'Fichas conseguidas', icon: 'ribbon-outline' },
+    { id: '5', title: 'Promociones', source: require('../../assets/images/chip.png')},
   ];
 
   const handleSignOut = async () => {
@@ -46,8 +45,11 @@ export default function ProfileScreen() {
             }
           }
           >
-            <View style={styles.iconWrapper}>
-              <Ionicons name={item.icon as any} size={22} color="#155EEF" />
+              <View style={styles.iconWrapper}>
+                {
+                  parseInt(item.id) == 5 ?<Image source={item.source} style = {{width: 24, height: 24, alignSelf: 'center'}} />
+                  :<Ionicons name={item.icon as any} size={22} color="#155EEF" />
+                }
             </View>
             <Text style={styles.menuText}>{item.title}</Text>
           </TouchableOpacity>

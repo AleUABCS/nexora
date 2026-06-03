@@ -1,10 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import * as React from "react";
 import { Dimensions, FlatList, Image, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Text } from '../../components/Themed';
-import { colors, globalStyles } from "../../constants/globalStyles";
+import { Text } from '../../../components/Themed';
+import { colors, globalStyles } from "../../../constants/globalStyles";
 
 const width = Dimensions.get("window").width;
 const height = Dimensions.get("window").height;
@@ -35,9 +35,9 @@ export default function BusinessView () {
             {id: 2, promotion_name: 'Nombre de la promociódsaddasdasasdasdadsadasdsdssdsan dos'}
         ],
         images: [
-            { id: '1', source: require('../../assets/images/cuyo1.jpg') },
-            { id: '2', source: require('../../assets/images/cuyo2.jpg') },
-            { id: '3', source: require('../../assets/images/cuyo3.jpg') },
+            { id: '1', source: require('../../../assets/images/cuyo1.jpg') },
+            { id: '2', source: require('../../../assets/images/cuyo2.jpg') },
+            { id: '3', source: require('../../../assets/images/cuyo3.jpg') },
         ],
         shedule: { // Horario
             lunes: [
@@ -126,7 +126,7 @@ export default function BusinessView () {
                                 <Text style = {{color: colors.placeHolder, paddingLeft: 5}}> {business_data.info.reviews} reseñas </Text>
                             </View>
                             <Text 
-                                onPress = {() => console.log("holaaaaaaaaa")}
+                                onPress={() => router.push(`/(reviews)/new?business-id=${business_data.info.business_id}`)}
                                 style = {{
                                     fontSize: 10, 
                                     color: colors.mainBlue, 

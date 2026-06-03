@@ -21,15 +21,15 @@ export default function StackLayout () {
         options={{ headerShown: false }} 
       />
       <Stack.Screen 
-        name="[business-id]" 
-        options={{ headerShown: false }} 
-      />
-      <Stack.Screen 
         name="business-images" 
         options={{ headerShown: false }} 
       />
       <Stack.Screen 
         name="(dashboard)" 
+        options={{ headerShown: false }} 
+      />
+      <Stack.Screen 
+        name="(business)" 
         options={{ headerShown: false }} 
       />
     </Stack>
