@@ -41,7 +41,7 @@ export default function ProfileScreen() {
               else if (item.id === '2') // Reseñas publicadas
                 router.push('/(stacks)/(reviews)')
               else if (item.id === '5')
-                router.push('/(stacks)/promotions')
+                router.push('/(stacks)/customer-promotions')
             }
           }
           >

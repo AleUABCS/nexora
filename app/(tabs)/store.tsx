@@ -103,7 +103,7 @@ export default function BusinessScreen() {
                   <Ionicons name="pricetag" size={16} color="#FFFFFF" />
                 </TouchableOpacity>
 
-                <TouchableOpacity 
+                {/* <TouchableOpacity 
                   style={styles.actionButton}
                   onPress={() => router.push({
                     pathname: '../(stacks)/(business)/appointments/schedule',
@@ -111,7 +111,7 @@ export default function BusinessScreen() {
                   })}
                 >
                   <Ionicons name="calendar" size={18} color="#FFFFFF" />
-                </TouchableOpacity>
+                </TouchableOpacity> */}
               </View>
 
               {index < negocios.length - 1 && <View style={styles.divider} />}

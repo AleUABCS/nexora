@@ -5,7 +5,7 @@ import { useState } from "react";
 import { FlatList, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors, globalStyles } from "../../constants/globalStyles";
-
+import { useFavoritesStore } from '../../store/saved-store';
 
 export default function SavedView() {
     // const removeSaved = (savedId: number) => {
@@ -18,15 +18,13 @@ export default function SavedView() {
         {id: 2, name: 'negocio 3', businessId: ''}
     ])
 
-    const removeSaved = (savedId: number) => {
-        setSaved(prev => prev.filter (item => item.id !== savedId))
-    }
+    const {removeSaved} = useFavoritesStore ()
 
     return (
         <SafeAreaView style = {globalStyles.mainContainer}> 
         <View style = {globalStyles.secondContainer}>
-            <Text style = {{...globalStyles.titleText, marginTop: 50}}>Guardados</Text>
-            <View style = {globalStyles.card}>
+            <Text style = {{...globalStyles.titleText, marginTop: 50, marginBottom: 30}}>Guardados</Text>
+            <View style = {{...globalStyles.card, maxHeight: '50%'}}>
                 <FlatList
                 data={saved}
                 keyExtractor={(item => item.id.toString())}
@@ -34,10 +32,10 @@ export default function SavedView() {
                     <View
                     style = {globalStyles.listItem}
                     >
-                        <TouchableOpacity style = {{width: '80%'}} onPress={() => router.push(`/${item.businessId}`)}>
+                        <TouchableOpacity style = {{width: '80%'}} onPress={() => router.push(`/(business)${item.businessId}`)}>
                             <Text style={globalStyles.listItemText}>{item.name}</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={() => removeSaved(item.id)}>
+                        <TouchableOpacity onPress={() => removeSaved(item.id.toString())}>
                             <Ionicons name="close-circle-outline" size={24} style={{color: colors.warn}}></Ionicons>
                         </TouchableOpacity>
                     </View>

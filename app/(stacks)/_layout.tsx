@@ -33,7 +33,7 @@ export default function StackLayout () {
         options={{ headerShown: false }} 
       />
       <Stack.Screen 
-        name="promotions" 
+        name="customer-promotions" 
         options={{ headerShown: false }} 
       />
     </Stack>
