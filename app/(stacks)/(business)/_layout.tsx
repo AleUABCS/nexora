@@ -15,6 +15,10 @@ export default function ReviewsLayout () {
         name="promotions" 
         options={{ headerShown: false }} 
       />
+      <Stack.Screen 
+        name="edit-business" 
+        options={{ headerShown: false }} 
+      />
     </Stack>
   );
 }

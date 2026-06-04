@@ -77,11 +77,19 @@ export default function BusinessScreen() {
                   <Ionicons name="trending-up" size={18} color="#FFFFFF" />
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.actionButton}>
+                <TouchableOpacity 
+                  style={styles.actionButton}
+                    onPress={() => router.push(`../(stacks)/(business)/${negocio.id}`)}
+                    >
                   <Ionicons name="eye" size={18} color="#FFFFFF" />
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.actionButton}>
+                <TouchableOpacity 
+                  style={styles.actionButton}
+                    onPress={() => router.push({
+                    pathname: '/(stacks)/(business)/edit-business',
+                    params: {id: negocio.id}
+                  })}                  >
                   <Ionicons name="pencil" size={16} color="#FFFFFF" />
                 </TouchableOpacity>
 
@@ -95,7 +103,13 @@ export default function BusinessScreen() {
                   <Ionicons name="pricetag" size={16} color="#FFFFFF" />
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.actionButton}>
+                <TouchableOpacity 
+                  style={styles.actionButton}
+                  onPress={() => router.push({
+                    pathname: '../(stacks)/(business)/appointments/schedule',
+                    params: {id: negocio.id}
+                  })}
+                >
                   <Ionicons name="calendar" size={18} color="#FFFFFF" />
                 </TouchableOpacity>
               </View>
