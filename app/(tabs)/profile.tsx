@@ -12,7 +12,6 @@ export default function ProfileScreen() {
   const menuItems = [
     { id: '1', title: 'Guardados', icon: 'bookmark-outline' },
     { id: '2', title: 'Reseñas publicadas', icon: 'star-outline' },
-    { id: '3', title: 'Citas agendadas', icon: 'calendar-outline' },
     { id: '5', title: 'Promociones', source: require('../../assets/images/chip.png')},
   ];
 
