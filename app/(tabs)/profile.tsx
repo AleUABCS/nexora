@@ -13,7 +13,6 @@ export default function ProfileScreen() {
     { id: '1', title: 'Guardados', icon: 'bookmark-outline' },
     { id: '2', title: 'Reseñas publicadas', icon: 'star-outline' },
     { id: '3', title: 'Citas agendadas', icon: 'calendar-outline' },
-    { id: '4', title: 'Fichas conseguidas', icon: 'ribbon-outline' },
     { id: '5', title: 'Promociones', source: require('../../assets/images/chip.png')},
   ];
 
@@ -42,12 +41,14 @@ export default function ProfileScreen() {
                 router.push('/saved')
               else if (item.id === '2') // Reseñas publicadas
                 router.push('/(stacks)/(reviews)')
+              else if (item.id === '5')
+                router.push('/(stacks)/promotions')
             }
           }
           >
               <View style={styles.iconWrapper}>
                 {
-                  parseInt(item.id) == 5 ?<Image source={item.source} style = {{width: 24, height: 24, alignSelf: 'center'}} />
+                  item.id === '5' ?<Image source={item.source} style = {{width: 24, height: 24, alignSelf: 'center'}} />
                   :<Ionicons name={item.icon as any} size={22} color="#155EEF" />
                 }
             </View>

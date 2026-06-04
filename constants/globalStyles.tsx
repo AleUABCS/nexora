@@ -5,7 +5,8 @@ export const colors = {
     mainBlue: "#0056D2",
     regularText: "#656565",
     secondaryBlue: "#E7EEFF",
-    promotion: "#3900BF"
+    promotion: "#3900BF",
+    promotionText: "#2A008C"
 }
 
 export const iconStyles = {
