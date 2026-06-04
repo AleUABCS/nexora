@@ -1,18 +1,18 @@
 import { Stack } from 'expo-router';
 
-export default function ReviewsLayout () {
+export default function PromotionsLayout () {
   return (
     <Stack>
       <Stack.Screen 
-        name="[business-id]" 
+        name="index" 
         options={{ headerShown: false }} 
       />
       <Stack.Screen 
-        name="(reviews)/new" 
+        name="[promotion-id]" 
         options={{ headerShown: false }} 
       />
       <Stack.Screen 
-        name="promotions" 
+        name="new" 
         options={{ headerShown: false }} 
       />
     </Stack>

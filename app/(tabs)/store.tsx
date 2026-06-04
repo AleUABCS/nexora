@@ -85,7 +85,13 @@ export default function BusinessScreen() {
                   <Ionicons name="pencil" size={16} color="#FFFFFF" />
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.actionButton}>
+                <TouchableOpacity 
+                  style={styles.actionButton} 
+                  onPress={() => router.push({
+                    pathname: '../(stacks)/(business)/promotions',
+                    params: {id: negocio.id}
+                  })}
+                  >
                   <Ionicons name="pricetag" size={16} color="#FFFFFF" />
                 </TouchableOpacity>
 
