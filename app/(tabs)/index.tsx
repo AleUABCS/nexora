@@ -1,8 +1,12 @@
-import { FontAwesome5, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import {
+  FontAwesome5,
+  Ionicons,
+  MaterialCommunityIcons,
+} from "@expo/vector-icons";
 
-import { collection, getDocs, getFirestore } from 'firebase/firestore';
+import { collection, getDocs, getFirestore } from "firebase/firestore";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 
 import {
   FlatList,
@@ -14,69 +18,69 @@ import {
   TextInput,
 
   TouchableOpacity,
+  View,
+} from "react-native";
 
-  View
-} from 'react-native';
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { SafeAreaView } from 'react-native-safe-area-context';
-
-import { router } from 'expo-router';
-import appFirebase from '../../credenciales.js';
-
-
+import { router } from "expo-router";
+import appFirebase from "../../credenciales.js";
 
 const db = getFirestore(appFirebase);
 
 
 
 const CATEGORIES = [
+  {
+    id: "1",
+    name: "Abarrotes y Tienditas",
+    icon: "store",
+    type: "FontAwesome5",
+  },
 
-  { id: '1', name: 'Abarrotes y Tienditas', icon: 'store', type: 'FontAwesome5' },
+  { id: "2", name: "Barberías", icon: "cut", type: "Ionicons" },
 
-  { id: '2', name: 'Barberías', icon: 'cut', type: 'Ionicons' },
+  { id: "3", name: "Cafeterías", icon: "coffee", type: "FontAwesome5" },
 
-  { id: '3', name: 'Cafeterías', icon: 'coffee', type: 'FontAwesome5' },
+  { id: "4", name: "Farmacias", icon: "medkit", type: "Ionicons" },
 
-  { id: '4', name: 'Farmacias', icon: 'medkit', type: 'Ionicons' },
+  { id: "5", name: "Ferreterías", icon: "hammer", type: "FontAwesome5" },
 
-  { id: '5', name: 'Ferreterías', icon: 'hammer', type: 'FontAwesome5' },
+  { id: "6", name: "Gimnasios", icon: "dumbbell", type: "FontAwesome5" },
 
-  { id: '6', name: 'Gimnasios', icon: 'dumbbell', type: 'FontAwesome5' },
+  {
+    id: "7",
+    name: "Mecánicos y Talleres",
+    icon: "wrench",
+    type: "FontAwesome5",
+  },
 
-  { id: '7', name: 'Mecánicos y Talleres', icon: 'wrench', type: 'FontAwesome5' },
+  { id: "8", name: "Pizzerías", icon: "pizza-slice", type: "FontAwesome5" },
 
-  { id: '8', name: 'Pizzerías', icon: 'pizza-slice', type: 'FontAwesome5' },
+  { id: "9", name: "Purificadoras", icon: "water", type: "Ionicons" },
 
-  { id: '9', name: 'Purificadoras', icon: 'water', type: 'Ionicons' },
-
-  { id: '10', name: 'Veterinarias', icon: 'paw', type: 'FontAwesome5' },
-
+  { id: "10", name: "Veterinarias", icon: "paw", type: "FontAwesome5" },
 ];
-
-
 
 export default function HomeScreen() {
 
   const [negocios, setNegocios] = useState<any[]>([]);
 
-  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<string | null>(null);
-
-
+  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<
+    string | null
+  >(null);
 
   useEffect(() => {
 
     const obtenerNegocios = async () => {
 
       try {
+        const querySnapshot = await getDocs(collection(db, "negocios"));
 
-        const querySnapshot = await getDocs(collection(db, 'negocios'));
-
-        const lista = querySnapshot.docs.map(doc => ({
-
+        const lista = querySnapshot.docs.map((doc) => ({
           id: doc.id,
 
-          ...doc.data()
-
+          ...doc.data(),
         }));
 
         setNegocios(lista);
@@ -95,62 +99,68 @@ export default function HomeScreen() {
 
   }, []);
 
-
-
   const manejarSeleccionCategoria = (nombreCategoria: string) => {
-
     if (categoriaSeleccionada === nombreCategoria) {
-
       setCategoriaSeleccionada(null);
-
     } else {
-
       setCategoriaSeleccionada(nombreCategoria);
-
     }
-
   };
 
-
-
-
-
   const negociosFiltrados = categoriaSeleccionada
-
-    ? negocios.filter(negocio => negocio?.categoriaNegocio?.toLowerCase() === categoriaSeleccionada.toLowerCase())
-
+    ? negocios.filter(
+        (negocio) =>
+          negocio?.categoriaNegocio?.toLowerCase() ===
+          categoriaSeleccionada.toLowerCase(),
+      )
     : negocios;
 
-
-
   const renderCategoryItem = ({ item }: { item: any }) => {
-
     const estaSeleccionado = categoriaSeleccionada === item.name;
 
-
-
     return (
-
-      <TouchableOpacity 
-
+      <TouchableOpacity
         style={styles.categoryButton}
-
         onPress={() => manejarSeleccionCategoria(item.name)}
-
       >
+        <View
+          style={[
+            styles.iconContainer,
+            estaSeleccionado && styles.iconContainerSelected,
+          ]}
+        >
+          {item.type === "FontAwesome5" && (
+            <FontAwesome5
+              name={item.icon}
+              size={22}
+              color={estaSeleccionado ? "#FFFFFF" : "#155EEF"}
+            />
+          )}
 
-        <View style={[styles.iconContainer, estaSeleccionado && styles.iconContainerSelected]}>
+          {item.type === "Ionicons" && (
+            <Ionicons
+              name={item.icon}
+              size={24}
+              color={estaSeleccionado ? "#FFFFFF" : "#155EEF"}
+            />
+          )}
 
-          {item.type === 'FontAwesome5' && <FontAwesome5 name={item.icon} size={22} color={estaSeleccionado ? '#FFFFFF' : '#155EEF'} />}
-
-          {item.type === 'Ionicons' && <Ionicons name={item.icon} size={24} color={estaSeleccionado ? '#FFFFFF' : '#155EEF'} />}
-
-          {item.type === 'MaterialCommunityIcons' && <MaterialCommunityIcons name={item.icon} size={24} color={estaSeleccionado ? '#FFFFFF' : '#155EEF'} />}
-
+          {item.type === "MaterialCommunityIcons" && (
+            <MaterialCommunityIcons
+              name={item.icon}
+              size={24}
+              color={estaSeleccionado ? "#FFFFFF" : "#155EEF"}
+            />
+          )}
         </View>
 
-        <Text style={[styles.categoryText, estaSeleccionado && styles.categoryTextSelected]} numberOfLines={2}>
-
+        <Text
+          style={[
+            styles.categoryText,
+            estaSeleccionado && styles.categoryTextSelected,
+          ]}
+          numberOfLines={2}
+        >
           {item.name}
 
         </Text>
@@ -166,22 +176,27 @@ export default function HomeScreen() {
   const renderBusiness = ({ item }: { item: any }) => {
 
     return (
-      <TouchableOpacity onPress = { () => router.push(`/(stacks)/(business)/${'id del negocio'}`)}>
+      <TouchableOpacity
+        onPress={() => router.push(`/(stacks)/(business)/${item.id}`)}
+      >
         <View style={styles.businessCard}>
+          <Text style={styles.businessName}>{item.nombreNegocio}</Text>
 
-          <Text style={styles.businessName}>{item.nombreNegocio || item.nombre}</Text>
+          <Text style={styles.businessDetail}>
+            Categoría: {item.categoriaNegocio || "Sin categoría"}
+          </Text>
 
-          <Text style={styles.businessDetail}>Categoría: {item.categoriaNegocio || 'Sin categoría'}</Text>
+          <Text style={styles.businessDetail}>
+            Descripción: {item.descripcion}
+          </Text>
 
-          <Text style={styles.businessDetail}>Descripción: {item.descripcion}</Text>
-
-          <Text style={styles.businessDetail}>Teléfono: {item.telefonoNegocio}</Text>
+          <Text style={styles.businessDetail}>
+            Teléfono: {item.telefonoNegocio}
+          </Text>
 
           <Text style={styles.businessDetail}>Email: {item.emailNegocio}</Text>
-
         </View>
       </TouchableOpacity>
-
     );
 
   };
@@ -193,13 +208,8 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.mainContainer}>
 
       <View style={styles.innerContainer}>
-
-        
-
         <View style={styles.searchContainer}>
-
-          <TextInput 
-
+          <TextInput
             style={styles.searchInput}
 
             placeholder="Buscar..."
@@ -208,8 +218,12 @@ export default function HomeScreen() {
 
           />
 
-          <Ionicons name="search" size={22} color="#A0A0A0" style={styles.searchIcon} />
-
+          <Ionicons
+            name="search"
+            size={22}
+            color="#A0A0A0"
+            style={styles.searchIcon}
+          />
         </View>
 
 
@@ -239,31 +253,20 @@ export default function HomeScreen() {
         <View style={styles.businessSection}>
 
           <FlatList
-
             data={negociosFiltrados}
-
             renderItem={renderBusiness}
 
             keyExtractor={(item) => item.id}
-
             showsVerticalScrollIndicator={false}
-
             ListEmptyComponent={
-
-              <Text style={{ textAlign: 'center', marginTop: 20, color: '#667085' }}>
-
+              <Text
+                style={{ textAlign: "center", marginTop: 20, color: "#667085" }}
+              >
                 No hay negocios disponibles en esta categoría.
-
               </Text>
-
             }
-
           />
-
         </View>
-
-
-
       </View>
 
     </SafeAreaView>
@@ -280,8 +283,7 @@ const styles = StyleSheet.create({
 
     flex: 1,
 
-    backgroundColor: '#FFFFFF',
-
+    backgroundColor: "#FFFFFF",
   },
 
   innerContainer: {
@@ -295,16 +297,15 @@ const styles = StyleSheet.create({
   },
 
   searchContainer: {
+    flexDirection: "row",
 
-    flexDirection: 'row',
+    alignItems: "center",
 
-    alignItems: 'center',
-
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
 
     borderWidth: 1,
 
-    borderColor: '#E5E5E5',
+    borderColor: "#E5E5E5",
 
     borderRadius: 20,
 
@@ -314,7 +315,7 @@ const styles = StyleSheet.create({
 
     marginBottom: 25,
 
-    shadowColor: '#000',
+    shadowColor: "#000",
 
     shadowOffset: { width: 0, height: 2 },
 
@@ -332,8 +333,7 @@ const styles = StyleSheet.create({
 
     fontSize: 16,
 
-    color: '#000000',
-
+    color: "#000000",
   },
 
   searchIcon: {
@@ -355,8 +355,7 @@ const styles = StyleSheet.create({
   },
 
   categoryButton: {
-
-    alignItems: 'center',
+    alignItems: "center",
 
     width: 75,
 
@@ -372,11 +371,11 @@ const styles = StyleSheet.create({
 
     height: 60,
 
-    backgroundColor: '#EEF4FF', 
+    backgroundColor: "#EEF4FF",
 
-    justifyContent: 'center',
+    justifyContent: "center",
 
-    alignItems: 'center',
+    alignItems: "center",
 
     marginBottom: 8,
 
@@ -392,20 +391,17 @@ const styles = StyleSheet.create({
 
     fontSize: 11,
 
-    color: '#155EEF',
+    color: "#155EEF",
 
-    textAlign: 'center',
+    textAlign: "center",
 
-    fontWeight: '500',
-
+    fontWeight: "500",
   },
 
   categoryTextSelected: {
+    fontWeight: "bold",
 
-    fontWeight: 'bold',
-
-    color: '#003fbd',
-
+    color: "#003fbd",
   },
 
   businessSection: {
@@ -413,16 +409,14 @@ const styles = StyleSheet.create({
     flex: 1,
 
     marginTop: 10,
-
   },
 
   businessCard: {
-
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
 
     borderWidth: 1,
 
-    borderColor: '#F0F0F0',
+    borderColor: "#F0F0F0",
 
     borderRadius: 12,
 
@@ -430,7 +424,7 @@ const styles = StyleSheet.create({
 
     marginBottom: 12,
 
-    shadowColor: '#000',
+    shadowColor: "#000",
 
     shadowOffset: { width: 0, height: 2 },
 
@@ -446,9 +440,9 @@ const styles = StyleSheet.create({
 
     fontSize: 16,
 
-    fontWeight: 'bold',
+    fontWeight: "bold",
 
-    color: '#101828',
+    color: "#101828",
 
     marginBottom: 6,
 
@@ -458,7 +452,7 @@ const styles = StyleSheet.create({
 
     fontSize: 13,
 
-    color: '#667085',
+    color: "#667085",
 
     marginBottom: 2,
 

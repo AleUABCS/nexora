@@ -4,7 +4,7 @@ export default function ReviewsLayout () {
   return (
     <Stack>
       <Stack.Screen 
-        name="[business-id]" 
+        name="[id]" 
         options={{ headerShown: false }} 
       />
       <Stack.Screen 
