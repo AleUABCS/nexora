@@ -3,8 +3,6 @@ import { create } from 'zustand';
 interface Business {
   id: string;
   name: string;
-  category?: string;
-  imageUrl?: string;
 }
 
 interface FavoritesStore {

@@ -18,7 +18,7 @@ export default function SavedView() {
         {id: 2, name: 'negocio 3', businessId: ''}
     ])
 
-    const {removeSaved} = useFavoritesStore ()
+    const {removeSaved, favorites} = useFavoritesStore ()
 
     return (
         <SafeAreaView style = {globalStyles.mainContainer}> 
@@ -26,13 +26,13 @@ export default function SavedView() {
             <Text style = {{...globalStyles.titleText, marginTop: 50, marginBottom: 30}}>Guardados</Text>
             <View style = {{...globalStyles.card, maxHeight: '50%'}}>
                 <FlatList
-                data={saved}
+                data={favorites}
                 keyExtractor={(item => item.id.toString())}
                 renderItem={({item}) => (
                     <View
                     style = {globalStyles.listItem}
                     >
-                        <TouchableOpacity style = {{width: '80%'}} onPress={() => router.push(`/(business)${item.businessId}`)}>
+                        <TouchableOpacity style = {{width: '80%'}} onPress={() => router.push(`/(business)${item.id}`)}>
                             <Text style={globalStyles.listItemText}>{item.name}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity onPress={() => removeSaved(item.id.toString())}>

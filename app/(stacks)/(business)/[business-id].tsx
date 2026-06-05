@@ -1,3 +1,4 @@
+import { useFavoritesStore } from "@/store/saved-store";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import * as React from "react";
@@ -12,7 +13,11 @@ const height = Dimensions.get("window").height;
 const container_width = width;
 const space = 10;
 export default function BusinessView () {
-    const { 'business-id' : business_id } = useLocalSearchParams()
+    const { 'business-id' : id } = useLocalSearchParams()
+    const business_id = Array.isArray(id) ? id[0] : id;
+
+    const { addFavorite } = useFavoritesStore ()
+
     console.log(business_id)
 
     // Reemplazar esta información con la real
@@ -25,6 +30,7 @@ export default function BusinessView () {
             description: 'Descripción del negocio, texto de ejemplo, etétera',
             email: 'correo@ejemplo.com',
             phone: '6131231234',
+            category: 'Categoría del negocio'
         },
         coordinates: { // Coordenadas en latitud y longitud 
             latitude: 24.1426,
@@ -139,13 +145,19 @@ export default function BusinessView () {
 
                         {/* Parte derecha (botones) */}
                         <View style = {{width: 'auto', flex: 1, alignItems: 'flex-end'}}>
-                            <TouchableOpacity style = {{
-                                ...styles.button, 
-                                width: 60, 
-                                height: 38,
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                            }}> 
+                            <TouchableOpacity 
+                                style = {{
+                                    ...styles.button, 
+                                    width: 60, 
+                                    height: 38,
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                }}
+                                onPress={ () => addFavorite({
+                                    id: business_id,
+                                    name: business_data.info.name,
+                                }) }
+                                > 
                                 <Ionicons name="bookmark-outline" size={20} color={colors.mainBlue}/>
                             </TouchableOpacity>
 
