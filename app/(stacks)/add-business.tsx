@@ -1,10 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { getAuth } from "firebase/auth";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
-import Select, { ISelectItem } from "rn-custom-select-dropdown";
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { addDoc, collection, getFirestore } from "firebase/firestore";
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import {
   Alert,
   Dimensions,
@@ -20,10 +20,17 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import appFirebase from "../../credenciales.js";
+import Select, { ISelectItem } from "rn-custom-select-dropdown";
+import { pickImages, useBusinessStore } from "../../store/business-store";
+
 const auth = getAuth(appFirebase);
 const db = getFirestore(appFirebase);
+const storage = getStorage(appFirebase);
+import { getStorage } from "firebase/storage";
+import appFirebase from "../../credenciales.js";
+
 const width = Dimensions.get("window").width;
+
 const categories: Array<ISelectItem<string>> = [
   {
     label: "Farmacias",
@@ -44,18 +51,45 @@ export default function registerBusinessScreen() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [description, setDescription] = useState("");
+  const [uploading, setUploading] = useState(false);
   const router = useRouter();
-  const [selectedValue, setSelectedValue] =
-    useState<ISelectItem<string> | null>(null);
-  //para saber si es numero valido
+  const [selectedValue, setSelectedValue] = useState<ISelectItem<string> | null>(null);
+
   const regex = /^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/;
-  //Para saber si es un email valido
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  const location = null; // Backend: Obtener ubicación del usuario
+  const location = null;
+
+  const { addImage, images, setImages, clearImages } = useBusinessStore();
+  const [preview, setPreview] = useState(images[0]);
+
+  useEffect(() => {
+    if (images[0]) setPreview(images[0]);
+  });
+
+  const uploadImagesToStorage = async (userId: string): Promise<string[]> => {
+    const uploadedUrls: string[] = [];
+
+    for (const imageUri of images) {
+      const response = await fetch(imageUri);
+      const blob = await response.blob();
+
+      const filename = `negocios/${userId}/${Date.now()}_${Math.random()
+        .toString(36)
+        .slice(2)}.jpg`;
+      const imageRef = ref(storage, filename);
+
+      await uploadBytes(imageRef, blob);
+      const downloadURL = await getDownloadURL(imageRef);
+      uploadedUrls.push(downloadURL);
+    }
+
+    return uploadedUrls;
+  };
 
   const handleRegisterBusiness = async () => {
     const usuarioActual = auth.currentUser;
+
     if (!usuarioActual) {
       Alert.alert("Aviso", "Usuario no logueado");
       return;
@@ -79,25 +113,42 @@ export default function registerBusinessScreen() {
     }
 
     try {
+      setUploading(true);
+
+      const imageUrls = await uploadImagesToStorage(usuarioActual.uid);
+
       const newBusiness = {
         nombreNegocio: nameBusiness,
         userId: usuarioActual.uid,
         descripcion: description,
         telefonoNegocio: phone,
         emailNegocio: email,
+        imagenes: imageUrls,
         createdAt: new Date().toISOString(),
       };
-      await addDoc(collection(db, "negocios"), newBusiness);
 
+      await addDoc(collection(db, "negocios"), newBusiness);
+      clearImages();
       Alert.alert("Éxito", "Negocio registrado");
       router.back();
     } catch (error) {
       console.log(error);
+      Alert.alert("Error", "No se pudo registrar el negocio");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const askForImages = () => {
+    if (images.length > 0) {
+      router.push("/business-images");
+    } else {
+      pickImages();
     }
   };
 
   return (
-    <SafeAreaView style={{ ...styles.mainContainer }}>
+    <SafeAreaView style={styles.mainContainer}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.mainContainer}
@@ -110,18 +161,19 @@ export default function registerBusinessScreen() {
           scrollEventThrottle={16}
           nestedScrollEnabled={true}
         >
-          {/* Aquí inicia el contenido */}
-          {/* Título de la pantalla */}
           <View style={styles.headerContainer}>
             <Text style={styles.titleText}>Registrar negocio</Text>
           </View>
 
           <View style={styles.card}>
-            {/* Contenedor de imagen y botón para subir imagen */}
-            {/* Falta back */}
+            {/* Imagen y botón */}
             <View style={styles.setImageContainer}>
               <Image
-                source={require("../../assets/images/placeholder-image.jpg")}
+                source={
+                  !images[0]
+                    ? require("../../assets/images/placeholder-image.jpg")
+                    : { uri: preview }
+                }
                 style={styles.image}
               />
               <TouchableOpacity
@@ -132,19 +184,19 @@ export default function registerBusinessScreen() {
                   justifyContent: "center",
                   alignItems: "center",
                 }}
+                onPress={askForImages}
               >
                 <Ionicons
                   name="add-circle-outline"
                   size={24}
                   color="#ffffff"
-                  marginRight={10}
+                  style={{ marginRight: 10 }}
                 />
-                <Text style={{ ...styles.buttonText, fontSize: 14 }}>
-                  Fotos
-                </Text>
+                <Text style={{ ...styles.buttonText, fontSize: 14 }}>Fotos</Text>
               </TouchableOpacity>
             </View>
 
+            {/* Nombre */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Nombre del Negocio</Text>
               <TextInput
@@ -156,6 +208,8 @@ export default function registerBusinessScreen() {
                 autoCapitalize="none"
               />
             </View>
+
+            {/* Descripción */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Descripción</Text>
               <TextInput
@@ -169,6 +223,7 @@ export default function registerBusinessScreen() {
               />
             </View>
 
+            {/* Categoría */}
             <View style={styles.inputGroup}>
               <GestureHandlerRootView style={{ flex: 1 }}>
                 <Select
@@ -180,10 +235,7 @@ export default function registerBusinessScreen() {
                     borderRadius: 20,
                     backgroundColor: "#FAFAFA",
                   }}
-                  placeholderStyle={{
-                    
-                    color: "#505050",
-                  }}
+                  placeholderStyle={{ color: "#505050" }}
                   dropdownItemStyle={{
                     margin: 1,
                     borderColor: "#E5E5E5",
@@ -194,13 +246,12 @@ export default function registerBusinessScreen() {
                   itemBackgroundColor="#FAFAFA"
                   arrowColor="#0056D2"
                   value={selectedValue}
-                  onChange={(newValue) => {
-                    setSelectedValue(newValue);
-                  }}
+                  onChange={(newValue: any) => setSelectedValue(newValue)}
                 />
               </GestureHandlerRootView>
             </View>
 
+            {/* Correo */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Correo de contacto</Text>
               <TextInput
@@ -214,6 +265,7 @@ export default function registerBusinessScreen() {
               />
             </View>
 
+            {/* Teléfono */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Teléfono de contacto</Text>
               <TextInput
@@ -226,7 +278,7 @@ export default function registerBusinessScreen() {
               />
             </View>
 
-            {/* Botón para establecer horario */}
+            {/* Horario */}
             <TouchableOpacity
               style={{
                 ...styles.button,
@@ -240,12 +292,12 @@ export default function registerBusinessScreen() {
               </Text>
             </TouchableOpacity>
 
-            {/* Cuadro de ubicación en el mapa*/}
+            {/* Ubicación */}
             <View style={styles.locationContainer}>
               <View style={styles.card}>
                 <Text style={styles.label}>Ubicación</Text>
                 <View style={styles.mapContainer}>
-                  {!location ? ( // Si no hay ubicación, como debería ser al crear el negocio, mostrar placeholder
+                  {!location ? (
                     <Text
                       style={{
                         ...styles.placeHolderTextColor,
@@ -257,18 +309,16 @@ export default function registerBusinessScreen() {
                       encontrar tu negocio
                     </Text>
                   ) : (
-                    // Mostrar el mapa con la ubicación, no sé si te sirva esta esctructura xd
                     <Text>Mapa con ubicación</Text>
                   )}
                 </View>
-                {/* Botón para ubicación */}
                 <TouchableOpacity style={styles.iconButton}>
                   <Ionicons
                     name="location-outline"
                     size={24}
                     color="#ffffff"
-                    marginRight={10}
-                  ></Ionicons>
+                    style={{ marginRight: 10 }}
+                  />
                   <Text style={{ ...styles.buttonText, fontSize: 14 }}>
                     Ubicación
                   </Text>
@@ -276,11 +326,15 @@ export default function registerBusinessScreen() {
               </View>
             </View>
 
+            {/* Publicar */}
             <TouchableOpacity
-              style={styles.button}
+              style={[styles.button, uploading && { opacity: 0.6 }]}
               onPress={handleRegisterBusiness}
+              disabled={uploading}
             >
-              <Text style={styles.buttonText}>Publicar negocio</Text>
+              <Text style={styles.buttonText}>
+                {uploading ? "Publicando..." : "Publicar negocio"}
+              </Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -294,23 +348,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#FFFFFF",
   },
-  innerContainer: {
-    flex: 1,
-    justifyContent: "center",
-    paddingHorizontal: 30,
-  },
   headerContainer: {
     alignItems: "center",
     marginBottom: 30,
     marginTop: 10,
-  },
-  logoText: {
-    fontSize: 36,
-    fontWeight: "900",
-    color: "#155EEF",
-    fontStyle: "italic",
-    marginBottom: 20,
-    letterSpacing: 1,
   },
   titleText: {
     fontSize: 32,
@@ -360,20 +401,6 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "bold",
-  },
-  footer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  footerText: {
-    fontSize: 14,
-    color: "#333333",
-  },
-  registerText: {
-    fontSize: 14,
-    color: "#0056D2",
-    fontWeight: "600",
   },
   setImageContainer: {
     flexDirection: "row",

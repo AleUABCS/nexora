@@ -1,7 +1,11 @@
 import { StyleSheet } from "react-native"
 
 export const colors = {
-    placeHolder: "#A1A1A1"
+    placeHolder: "#A1A1A1",
+    mainBlue: "#0056D2",
+    secondaryBlue: "#E8F0FE",
+    regularText: "#555555",
+    promotion: "#0056D2",
 }
 
 export const globalStyles = StyleSheet.create({
@@ -30,6 +34,7 @@ export const globalStyles = StyleSheet.create({
         marginBottom: 20,
         marginTop: 10,
     },
+    
     titleText: {
         fontSize: 38,
         alignSelf: 'center',
