@@ -50,14 +50,15 @@ export default function RegisterBusinessScreen() {
   const [description, setDescription] = useState("");
   const [uploading, setUploading] = useState(false);
   const router = useRouter();
-  const [selectedValue, setSelectedValue] = useState<ISelectItem<string> | null>(null);
+  const [selectedValue, setSelectedValue] =
+    useState<ISelectItem<string> | null>(null);
 
   const regex = /^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/;
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   const location = null;
 
-  const { addImage, images, setImages, clearImages } = useBusinessStore();
+  const { images, clearImages } = useBusinessStore();
   const [preview, setPreview] = useState(images[0]);
 
   useEffect(() => {
@@ -191,7 +192,9 @@ export default function RegisterBusinessScreen() {
                   color="#ffffff"
                   style={{ marginRight: 10 }}
                 />
-                <Text style={{ ...styles.buttonText, fontSize: 14 }}>Fotos</Text>
+                <Text style={{ ...styles.buttonText, fontSize: 14 }}>
+                  Fotos
+                </Text>
               </TouchableOpacity>
             </View>
 

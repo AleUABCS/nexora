@@ -4,19 +4,21 @@ import {
   MaterialCommunityIcons,
 } from "@expo/vector-icons";
 
-import { collection, getDocs, getFirestore } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  getDocs,
+  getFirestore,
+  serverTimestamp,
+} from "firebase/firestore";
 
 import React, { useEffect, useState } from "react";
 
 import {
   FlatList,
-
   StyleSheet,
-
   Text,
-
   TextInput,
-
   TouchableOpacity,
   View,
 } from "react-native";
@@ -27,8 +29,6 @@ import { router } from "expo-router";
 import appFirebase from "../../credenciales.js";
 
 const db = getFirestore(appFirebase);
-
-
 
 const CATEGORIES = [
   {
@@ -63,7 +63,6 @@ const CATEGORIES = [
 ];
 
 export default function HomeScreen() {
-
   const [negocios, setNegocios] = useState<any[]>([]);
 
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<
@@ -71,9 +70,7 @@ export default function HomeScreen() {
   >(null);
 
   useEffect(() => {
-
     const obtenerNegocios = async () => {
-
       try {
         const querySnapshot = await getDocs(collection(db, "negocios"));
 
@@ -84,19 +81,12 @@ export default function HomeScreen() {
         }));
 
         setNegocios(lista);
-
       } catch (error) {
-
         console.error("Error al obtener los datos: ", error);
-
       }
-
     };
 
-
-
     obtenerNegocios();
-
   }, []);
 
   const manejarSeleccionCategoria = (nombreCategoria: string) => {
@@ -162,22 +152,30 @@ export default function HomeScreen() {
           numberOfLines={2}
         >
           {item.name}
-
         </Text>
-
       </TouchableOpacity>
-
     );
-
   };
 
-
+  const registrarClick = async (businessId: string) => {
+    try {
+      await addDoc(collection(db, "clicks_negocios"), {
+        business_id: businessId,
+        created_at: serverTimestamp(),
+      });
+      console.log("exito");
+    } catch (error) {
+      console.error("Error al registrar el click:", error);
+    }
+  };
 
   const renderBusiness = ({ item }: { item: any }) => {
-
     return (
       <TouchableOpacity
-        onPress={() => router.push(`/(stacks)/(business)/${item.id}`)}
+        onPress={() => {
+          registrarClick(item.id);
+          router.push(`/(stacks)/(business)/${item.id}`);
+        }}
       >
         <View style={styles.businessCard}>
           <Text style={styles.businessName}>{item.nombreNegocio}</Text>
@@ -198,24 +196,16 @@ export default function HomeScreen() {
         </View>
       </TouchableOpacity>
     );
-
   };
 
-
-
   return (
-
     <SafeAreaView style={styles.mainContainer}>
-
       <View style={styles.innerContainer}>
         <View style={styles.searchContainer}>
           <TextInput
             style={styles.searchInput}
-
             placeholder="Buscar..."
-
             placeholderTextColor="#A0A0A0"
-
           />
 
           <Ionicons
@@ -226,36 +216,21 @@ export default function HomeScreen() {
           />
         </View>
 
-
-
         <View style={styles.categoriesSection}>
-
           <FlatList
-
             data={CATEGORIES}
-
             renderItem={renderCategoryItem}
-
             keyExtractor={(item) => item.id}
-
             horizontal
-
             showsHorizontalScrollIndicator={false}
-
             contentContainerStyle={styles.categoriesList}
-
           />
-
         </View>
 
-
-
         <View style={styles.businessSection}>
-
           <FlatList
             data={negociosFiltrados}
             renderItem={renderBusiness}
-
             keyExtractor={(item) => item.id}
             showsVerticalScrollIndicator={false}
             ListEmptyComponent={
@@ -268,32 +243,23 @@ export default function HomeScreen() {
           />
         </View>
       </View>
-
     </SafeAreaView>
-
   );
-
 }
 
-
-
 const styles = StyleSheet.create({
-
   mainContainer: {
-
     flex: 1,
 
     backgroundColor: "#FFFFFF",
   },
 
   innerContainer: {
-
     flex: 1,
 
     paddingHorizontal: 20,
 
     paddingTop: 10,
-
   },
 
   searchContainer: {
@@ -324,11 +290,9 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
 
     elevation: 2,
-
   },
 
   searchInput: {
-
     flex: 1,
 
     fontSize: 16,
@@ -337,21 +301,15 @@ const styles = StyleSheet.create({
   },
 
   searchIcon: {
-
     marginLeft: 10,
-
   },
 
   categoriesSection: {
-
     marginBottom: 20,
-
   },
 
   categoriesList: {
-
     paddingVertical: 5,
-
   },
 
   categoryButton: {
@@ -360,11 +318,9 @@ const styles = StyleSheet.create({
     width: 75,
 
     marginRight: 12,
-
   },
 
   iconContainer: {
-
     borderRadius: 8,
 
     width: 60,
@@ -378,17 +334,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
 
     marginBottom: 8,
-
   },
 
   iconContainerSelected: {
-
-    backgroundColor: '#155EEF',
-
+    backgroundColor: "#155EEF",
   },
 
   categoryText: {
-
     fontSize: 11,
 
     color: "#155EEF",
@@ -405,7 +357,6 @@ const styles = StyleSheet.create({
   },
 
   businessSection: {
-
     flex: 1,
 
     marginTop: 10,
@@ -433,11 +384,9 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
 
     elevation: 1,
-
   },
 
   businessName: {
-
     fontSize: 16,
 
     fontWeight: "bold",
@@ -445,17 +394,13 @@ const styles = StyleSheet.create({
     color: "#101828",
 
     marginBottom: 6,
-
   },
 
   businessDetail: {
-
     fontSize: 13,
 
     color: "#667085",
 
     marginBottom: 2,
-
   },
-
 });

@@ -1,7 +1,16 @@
 import { useFavoritesStore } from "@/store/saved-store";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import { doc, getDoc, getFirestore } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getCountFromServer,
+  getDoc,
+  getDocs,
+  getFirestore,
+  query,
+  where,
+} from "firebase/firestore";
 import * as React from "react";
 import { useEffect, useState } from "react";
 import {
@@ -9,6 +18,8 @@ import {
   Dimensions,
   FlatList,
   Image,
+  Alert,
+  Linking,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
@@ -26,12 +37,16 @@ const height = Dimensions.get("window").height;
 
 const container_width = width;
 const space = 10;
+
 export default function BusinessView() {
+  const [totalReviews, setTotalReviews] = useState(0);
+  const [promedioRating, setPromedioRating] = useState(0);
   const { id } = useLocalSearchParams();
   const [negocio, setNegocio] = useState<any>(null);
   const [cargando, setCargando] = useState(true);
 
-  const { addFavorite } = useFavoritesStore()
+  const { addFavorite, removeSaved, favorites } = useFavoritesStore();
+  const isFavorite = favorites.some((fav) => fav.id === (id as string));
 
   useEffect(() => {
     const obtenerNegocio = async () => {
@@ -54,6 +69,64 @@ export default function BusinessView() {
     if (id) obtenerNegocio();
   }, [id]);
 
+  const sendWhatsApp = () => {
+    const limpiaNumero = negocio.telefonoNegocio.replace(/[^0-6]/g, "");
+
+    const codigoPais = "52";
+    const phoneNumber = limpiaNumero.startsWith(codigoPais)
+      ? limpiaNumero
+      : `${codigoPais}${limpiaNumero}`;
+
+    const message = "¡Hola! Me comunico desde la app Nexora.";
+    const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+
+    Linking.canOpenURL(url)
+      .then((supported) => {
+        if (supported) {
+          return Linking.openURL(url);
+        } else {
+          Alert.alert(
+            "Error",
+            "WhatsApp no está instalado en este dispositivo.",
+          );
+        }
+      })
+      .catch((err) => console.error("Error al abrir WhatsApp:", err));
+  };
+
+  useEffect(() => {
+    const calcularPromedioYTotal = async () => {
+      try {
+        const q = query(
+          collection(db, "reviews"),
+          where("business_id", "==", id),
+        );
+
+        const countSnapshot = await getCountFromServer(q);
+        const total = countSnapshot.data().count;
+        setTotalReviews(total);
+
+        if (total > 0) {
+          const querySnapshot = await getDocs(q);
+          let sumaCalificaciones = 0;
+
+          querySnapshot.forEach((doc) => {
+            sumaCalificaciones += doc.data().rating;
+          });
+
+          const promedio = sumaCalificaciones / total;
+          setPromedioRating(Number(promedio.toFixed(1)));
+        } else {
+          setPromedioRating(0);
+        }
+      } catch (error) {
+        console.error("Error calculando el promedio:", error);
+      }
+    };
+
+    if (id) calcularPromedioYTotal();
+  }, [id]);
+
   if (cargando)
     return <ActivityIndicator size="large" style={{ marginTop: 50 }} />;
   if (!negocio) return <Text>Negocio no encontrado</Text>;
@@ -62,11 +135,11 @@ export default function BusinessView() {
     info: {
       business_id: id,
       name: negocio.nombreNegocio,
-      rate: 4.5,
-      reviews: 3,
+      rate: promedioRating,
+      reviews: totalReviews,
       description: negocio.descripcion,
       email: negocio.emailNegocio,
-      phone: negocio.emailNegocio,
+      phone: negocio.telefonoNegocio,
     },
     coordinates: {
       // Coordenadas en latitud y longitud
@@ -81,11 +154,6 @@ export default function BusinessView() {
         promotion_name:
           "Nombre de la promociódsaddasdasasdasdadsadasdsdssdsan dos",
       },
-    ],
-    images: [
-      { id: "1", source: require("../../../assets/images/cuyo1.jpg") },
-      { id: "2", source: require("../../../assets/images/cuyo2.jpg") },
-      { id: "3", source: require("../../../assets/images/cuyo3.jpg") },
     ],
     shedule: {
       // Horario
@@ -137,7 +205,7 @@ export default function BusinessView() {
         </View>
         <View style={{ ...globalStyles.secondContainer, marginTop: 0 }}>
           {/* Primer contenedor de la información */}
-          <View style={{...styles.infoContainer, marginHorizontal: 0}}>
+          <View style={{ ...styles.infoContainer, marginHorizontal: 0 }}>
             {/* Parte izquierda */}
             <View style={{ width: "60%" }}>
               <Text style={styles.name}>{business_data.info.name} </Text>
@@ -161,7 +229,7 @@ export default function BusinessView() {
                   style={{ color: "#000", fontWeight: "bold", paddingLeft: 10 }}
                 >
                   {" "}
-                  {business_data.info.rate}{" "}
+                  {business_data.info.rate} estrellas
                 </Text>
                 <Text style={{ color: colors.placeHolder, paddingLeft: 5 }}>
                   {" "}
@@ -171,11 +239,11 @@ export default function BusinessView() {
               <Text
                 onPress={() =>
                   router.push(
-                    `/(reviews)/new?business-id=${business_data.info.business_id}`,
+                    `/(reviews)/new?id=${business_data.info.business_id}`,
                   )
                 }
                 style={{
-                  fontSize: 10,
+                  fontSize: 14,
                   color: colors.mainBlue,
                   textDecorationLine: "underline",
                   marginTop: 10,
@@ -195,18 +263,19 @@ export default function BusinessView() {
                   alignItems: "center",
                   justifyContent: "center",
                 }}
-
-                onPress={ () => {
-                  addFavorite(
-                    {
+                onPress={() => {
+                  if (isFavorite) {
+                    removeSaved(id as string);
+                  } else {
+                    addFavorite({
                       id: business_data.info.business_id.toString(),
                       name: business_data.info.name,
-                    }
-                  )
+                    });
+                  }
                 }}
               >
                 <Ionicons
-                  name="bookmark-outline"
+                  name={isFavorite ? "bookmark" : "bookmark-outline"}
                   size={20}
                   color={colors.mainBlue}
                 />
@@ -234,7 +303,9 @@ export default function BusinessView() {
               {business_data.promotions.map((promo, index) => (
                 <TouchableOpacity
                   key={index}
-                  onPress={() => router.push(`/customer-promotions/${promo.id}`)}
+                  onPress={() =>
+                    router.push(`/customer-promotions/${promo.id}`)
+                  }
                   style={styles.promotion}
                 >
                   <Text
@@ -256,15 +327,17 @@ export default function BusinessView() {
           {/* Tarjetas de información */}
           <View style={{ marginTop: 20 }}>
             {/* Descripción */}
-            <View style={{...styles.card, marginHorizontal: 5}}>
+            <View style={{ ...styles.card, marginHorizontal: 5 }}>
               <Text style={{ ...styles.text }}>Descripción</Text>
-              <Text style={{ color: colors.regularText, fontSize: 14, padding: 10 }}>
+              <Text
+                style={{ color: colors.regularText, fontSize: 16, padding: 10 }}
+              >
                 {business_data.info.description}
               </Text>
             </View>
 
             {/* Ubicación */}
-            <View style={{...styles.card, marginHorizontal: 5}}>
+            <View style={{ ...styles.card, marginHorizontal: 5 }}>
               <Text style={{ ...styles.text }}>Ubicación </Text>
               <View style={styles.mapPlaceholder}>
                 <Text>Aquí va el mapa</Text>
@@ -272,14 +345,27 @@ export default function BusinessView() {
             </View>
 
             {/* Horario */}
-            <View style={{...styles.card, marginHorizontal: 5}}>
-              <Text style={{ ...styles.text, alignSelf: "center", marginBottom: 10, fontSize: 16}}>
+            <View style={{ ...styles.card, marginHorizontal: 5 }}>
+              <Text
+                style={{
+                  ...styles.text,
+                  alignSelf: "center",
+                  marginBottom: 10,
+                  fontSize: 17,
+                }}
+              >
                 Horario
               </Text>
               {Object.entries(business_data.shedule).map(([day, block]) => (
                 <View key={day} style={{ marginBottom: 8 }}>
                   <View style={{ flexDirection: "row", width: "100%" }}>
-                    <Text style={{ fontWeight: "bold", color: "#000", fontSize: 12 }}>
+                    <Text
+                      style={{
+                        fontWeight: "bold",
+                        color: "#000",
+                        fontSize: 14,
+                      }}
+                    >
                       {day === "lunes" && "Lunes"}
                       {day === "martes" && "Martes"}
                       {day === "miercoles" && "Miércoles"}
@@ -290,7 +376,10 @@ export default function BusinessView() {
                     </Text>
                     <View style={{ flex: 1, alignItems: "flex-end" }}>
                       {block.map((turn, index) => (
-                        <Text style={{ color: colors.regularText, fontSize: 12 }} key={index}>
+                        <Text
+                          style={{ color: colors.regularText, fontSize: 12 }}
+                          key={index}
+                        >
                           {turn.open} - {turn.close}
                         </Text>
                       ))}
@@ -301,24 +390,39 @@ export default function BusinessView() {
             </View>
 
             {/* Contacto */}
-            <View style={{...styles.card, marginHorizontal: 10}}>
-              <Text style={{ ...styles.text, alignSelf: "center", marginBottom: 10 }}>
+            <View style={{ ...styles.card, marginHorizontal: 10 }}>
+              <Text
+                style={{
+                  ...styles.text,
+                  alignSelf: "center",
+                  marginBottom: 10,
+                }}
+              >
                 Contacto
               </Text>
-              <View style={{ flexDirection: "row" }}>
-                <Ionicons name="call-outline" size={20} color={colors.mainBlue} />
-                <Text style={{ ...styles.text, fontSize: 12, paddingLeft: 10 }}>
-                  {business_data.info.phone}
-                </Text>
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <Ionicons name="logo-whatsapp" size={20} color="#25D366" />
+                <TouchableOpacity
+                  style={{ paddingLeft: 10, flex: 1 }}
+                  onPress={sendWhatsApp}
+                >
+                  <Text style={{ fontSize: 14, color: "#313131" }}>
+                    {business_data.info.phone}
+                  </Text>
+                </TouchableOpacity>
               </View>
               <View style={{ flexDirection: "row", marginTop: 15 }}>
-                <Ionicons name="mail-outline" size={20} color={colors.mainBlue} />
-                <Text style={{ ...styles.text, fontSize: 12, paddingLeft: 10 }}>
+                <Ionicons
+                  name="mail-outline"
+                  size={20}
+                  color={colors.mainBlue}
+                />
+                <Text style={{ ...styles.text, fontSize: 15, paddingLeft: 10 }}>
                   {business_data.info.email}
                 </Text>
               </View>
             </View>
-          </View>        
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -342,7 +446,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   name: {
-    fontSize: 16,
+    fontSize: 26,
     color: "#000000",
     fontWeight: "bold",
   },
@@ -370,19 +474,19 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   text: {
-    fontSize: 14,
+    fontSize: 16,
     color: "#333",
   },
   card: {
     ...globalStyles.card,
     marginBottom: 15,
-    padding: 10,
+    padding: 15,
   },
   mapPlaceholder: {
     alignSelf: "center",
     alignItems: "center",
     margin: 10,
-    height: 100,
+    height: 200,
     width: "100%",
     backgroundColor: colors.placeHolder,
     borderRadius: 5,

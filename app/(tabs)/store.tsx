@@ -73,7 +73,7 @@ export default function BusinessScreen() {
               <Text style={styles.businessName}>{negocio.nombreNegocio}</Text>
 
               <View style={styles.actionsContainer}>
-                <TouchableOpacity style={styles.actionButton} onPress={ () => router.push(`../(stacks)/(dashboard)/${'hola'}` as Href)}>
+                <TouchableOpacity style={styles.actionButton} onPress={ () => router.push(`../(stacks)/(dashboard)/${negocio.id}` as Href)}>
                   <Ionicons name="trending-up" size={18} color="#FFFFFF" />
                 </TouchableOpacity>
 

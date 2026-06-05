@@ -1,7 +1,15 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import {
+  getFirestore,
+  doc,
+  deleteDoc,
+  getDoc,
+  updateDoc,
+} from "firebase/firestore";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+const storage = getStorage(appFirebase);
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -16,7 +24,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -44,8 +52,7 @@ const categories: Array<ISelectItem<string>> = [
 
 export default function EditBusinessScreen() {
   const router = useRouter();
-  const { 'id' : business_id } = useLocalSearchParams()
-  
+  const { id } = useLocalSearchParams();
   const [loading, setLoading] = useState(false);
   const [nameBusiness, setNameBusiness] = useState("");
   const [phone, setPhone] = useState("");
@@ -59,33 +66,123 @@ export default function EditBusinessScreen() {
 
   const location = null; // Backend: Obtener ubicación del negocio
 
+  useEffect(() => {
+    const cargarDatosNegocio = async () => {
+      try {
+        setLoading(true);
+        const docRef = doc(db, "negocios", id as string);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          const datos = docSnap.data();
+          setNameBusiness(datos.nombreNegocio || "");
+          setDescription(datos.descripcion || "");
+          setEmail(datos.emailNegocio || "");
+          setPhone(datos.telefonoNegocio || "");
+
+          if (datos.categoriaNegocio) {
+            setSelectedValue({
+              label: datos.categoria,
+              value: datos.categoria,
+            });
+          }
+          if (datos.imagenes && datos.imagenes.length > 0) {
+            setImages(datos.imagenes);
+          } else {
+            clearImages();
+          }
+        } else {
+          Alert.alert("Error", "No se encontraron los datos del negocio.");
+          router.back();
+        }
+      } catch (error) {
+        console.error("Error al precargar el negocio:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) cargarDatosNegocio();
+  }, [id]);
+
   const handleUpdateBusiness = async () => {
-    // Lógica editar back
+    if (!validateFields()) {
+      Alert.alert("Aviso", "Por favor, llena correctamente todos los campos.");
+      return;
+    }
 
-    router.back()
-  }
+    try {
+      setLoading(true);
 
+      let imageUrls: string[] = [];
+
+      for (const imageUri of images) {
+        if (imageUri.startsWith("file://")) {
+          const response = await fetch(imageUri);
+          const blob = await response.blob();
+
+          const filename = `negocios/${id}/imagen_${Date.now()}.jpg`;
+          const storageRef = ref(storage, filename);
+
+          await uploadBytes(storageRef, blob);
+          const downloadUrl = await getDownloadURL(storageRef);
+          imageUrls.push(downloadUrl);
+        } else {
+          imageUrls.push(imageUri);
+        }
+      }
+
+      const docRef = doc(db, "negocios", id as string);
+      await updateDoc(docRef, {
+        nombreNegocio: nameBusiness,
+        descripcion: description,
+        emailNegocio: email,
+        telefonoNegocio: phone,
+        categoriaNegocio: selectedValue?.value,
+        imagenes: imageUrls,
+      });
+
+      Alert.alert("Éxito", "Negocio actualizado correctamente.");
+      router.back();
+    } catch (error) {
+      console.error("Error al actualizar:", error);
+      Alert.alert("Error", "No se pudieron guardar los cambios.");
+    } finally {
+      setLoading(false);
+    }
+  };
   const handleDeleteBusiness = async () => {
     Alert.alert(
-      'Eliminar negocio',
-      '¿Estas seguro de que quieres eliminar tu negocio? Esta acción no se puede deshacer',
+      "Eliminar negocio",
+      "¿Estas seguro de que quieres eliminar tu negocio? Esta acción no se puede deshacer",
       [
-          {
-              text: 'Aceptar',
-              onPress: () => {
-                // Eliminar negocio en el back ayuda
-                
-                router.dismissAll()
-              }
+        {
+          text: "Aceptar",
+          onPress: async () => {
+            try {
+              const docRef = doc(db, "negocios", id as string);
+
+              await deleteDoc(docRef);
+
+              Alert.alert(
+                "Éxito",
+                "El negocio ha sido eliminado correctamente.",
+              );
+            } catch (error) {
+              console.error("Error al eliminar el negocio:", error);
+              Alert.alert("Error", "No se pudo eliminar el negocio.");
+            }
+
+            router.dismissAll();
           },
-          {
-              text: 'Cancelar',
-              style: 'cancel'
-          }
-      ]
-    )
-    router.back()
-  }
+        },
+        {
+          text: "Cancelar",
+          style: "cancel",
+        },
+      ],
+    );
+  };
 
   const { addImage, images, setImages, clearImages } = useBusinessStore();
 
@@ -268,7 +365,7 @@ export default function EditBusinessScreen() {
               onPress={() =>
                 router.push({
                   pathname: "/set-schedule",
-                  params: { business_id },
+                  params: { id },
                 })
               }
             >
@@ -290,8 +387,8 @@ export default function EditBusinessScreen() {
                         margin: 20,
                       }}
                     >
-                      Añade una ubicación para que tus clientes puedan
-                      encontrar tu negocio
+                      Añade una ubicación para que tus clientes puedan encontrar
+                      tu negocio
                     </Text>
                   ) : (
                     <Text>Mapa con ubicación</Text>
@@ -318,7 +415,11 @@ export default function EditBusinessScreen() {
               <Text style={styles.buttonText}>Guardar cambios</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={{...styles.button, marginTop: 10, backgroundColor: colors.warn}}
+              style={{
+                ...styles.button,
+                marginTop: 10,
+                backgroundColor: colors.warn,
+              }}
               onPress={handleDeleteBusiness}
             >
               <Text style={styles.buttonText}>Eliminar negocio</Text>
@@ -395,7 +496,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   buttonText: {
-    color: "#FFFFFF",
+    color: "#ffffff",
     fontSize: 16,
     fontWeight: "bold",
   },

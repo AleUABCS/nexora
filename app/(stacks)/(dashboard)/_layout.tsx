@@ -4,7 +4,7 @@ export default function DashboardLayout () {
   return (
     <Stack>
       <Stack.Screen 
-        name="[id-dashboard]" 
+        name="[id]" 
         options={{ headerShown: false }} 
       />
     </Stack>
