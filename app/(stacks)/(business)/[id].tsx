@@ -1,17 +1,18 @@
+import { useFavoritesStore } from "@/store/saved-store";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { doc, getDoc, getFirestore } from "firebase/firestore";
 import * as React from "react";
 import { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Dimensions,
-    FlatList,
-    Image,
-    ScrollView,
-    StyleSheet,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Dimensions,
+  FlatList,
+  Image,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Text } from "../../../components/Themed";
@@ -29,6 +30,8 @@ export default function BusinessView() {
   const { id } = useLocalSearchParams();
   const [negocio, setNegocio] = useState<any>(null);
   const [cargando, setCargando] = useState(true);
+
+  const { addFavorite } = useFavoritesStore()
 
   useEffect(() => {
     const obtenerNegocio = async () => {
@@ -134,7 +137,7 @@ export default function BusinessView() {
         </View>
         <View style={{ ...globalStyles.secondContainer, marginTop: 0 }}>
           {/* Primer contenedor de la información */}
-          <View style={styles.infoContainer}>
+          <View style={{...styles.infoContainer, marginHorizontal: 0}}>
             {/* Parte izquierda */}
             <View style={{ width: "60%" }}>
               <Text style={styles.name}>{business_data.info.name} </Text>
@@ -192,6 +195,15 @@ export default function BusinessView() {
                   alignItems: "center",
                   justifyContent: "center",
                 }}
+
+                onPress={ () => {
+                  addFavorite(
+                    {
+                      id: business_data.info.business_id.toString(),
+                      name: business_data.info.name,
+                    }
+                  )
+                }}
               >
                 <Ionicons
                   name="bookmark-outline"
@@ -200,7 +212,7 @@ export default function BusinessView() {
                 />
               </TouchableOpacity>
 
-              <TouchableOpacity
+              {/* <TouchableOpacity
                 style={{
                   ...styles.button,
                   height: 38,
@@ -211,18 +223,18 @@ export default function BusinessView() {
                 <Text style={{ color: colors.mainBlue, fontSize: 10 }}>
                   Agendar cita
                 </Text>
-              </TouchableOpacity>
+              </TouchableOpacity> */}
             </View>
           </View>
 
           {/* Promociones */}
-          <View style={{ marginTop: 20 }}>
+          <View style={{ marginTop: 20, marginHorizontal: 5 }}>
             <Text style={styles.text}>Promociones activas </Text>
             <View style={{ marginTop: 15 }}>
               {business_data.promotions.map((promo, index) => (
                 <TouchableOpacity
                   key={index}
-                  onPress={() => console.log(promo)}
+                  onPress={() => router.push(`/customer-promotions/${promo.id}`)}
                   style={styles.promotion}
                 >
                   <Text
@@ -242,126 +254,71 @@ export default function BusinessView() {
           </View>
 
           {/* Tarjetas de información */}
-          <View
-            style={{
-              marginTop: 20,
-              flexDirection: "row",
-              justifyContent: "space-between",
-            }}
-          >
-            {/* Izquierda */}
-            <View style={{ width: "55%" }}>
-              {/* Descripción */}
-              <View style={styles.card}>
-                <Text style={{ ...styles.text }}>Descripción</Text>
-                <Text
-                  style={{
-                    color: colors.regularText,
-                    fontSize: 12,
-                    marginTop: 10,
-                  }}
-                >
-                  {business_data.info.description}
-                </Text>
-              </View>
+          <View style={{ marginTop: 20 }}>
+            {/* Descripción */}
+            <View style={{...styles.card, marginHorizontal: 5}}>
+              <Text style={{ ...styles.text }}>Descripción</Text>
+              <Text style={{ color: colors.regularText, fontSize: 14, padding: 10 }}>
+                {business_data.info.description}
+              </Text>
+            </View>
 
-              {/* Ubicación (pendiente) */}
-              <View style={styles.card}>
-                <Text style={{ ...styles.text }}>Ubicación </Text>
-                <View style={styles.mapPlaceholder}>
-                  <Text>Aquí va el mapa</Text>
-                </View>
+            {/* Ubicación */}
+            <View style={{...styles.card, marginHorizontal: 5}}>
+              <Text style={{ ...styles.text }}>Ubicación </Text>
+              <View style={styles.mapPlaceholder}>
+                <Text>Aquí va el mapa</Text>
               </View>
             </View>
 
-            {/* Derecha */}
-            <View style={{ width: "42%" }}>
-              <View style={styles.card}>
-                {/* Horario */}
-                <Text
-                  style={{
-                    ...styles.text,
-                    alignSelf: "center",
-                    marginBottom: 10,
-                  }}
-                >
-                  Horario
-                </Text>
-                {Object.entries(business_data.shedule).map(([day, block]) => (
-                  <View key={day} style={{ marginBottom: 8 }}>
-                    <View style={{ flexDirection: "row", width: "100%" }}>
-                      <Text
-                        style={{
-                          fontWeight: "bold",
-                          color: "#000",
-                          fontSize: 8,
-                        }}
-                      >
-                        {day === "lunes" && "Lunes"}
-                        {day === "martes" && "Martes"}
-                        {day === "miercoles" && "Miércoles"}
-                        {day === "jueves" && "Jueves"}
-                        {day === "viernes" && "Viernes"}
-                        {day === "sabado" && "Sábado"}
-                        {day === "domingo" && "Domingo"}
-                      </Text>
-                      <View style={{ flex: 1, alignItems: "flex-end" }}>
-                        {block.map((turn, index) => (
-                          <Text
-                            style={{ color: colors.regularText, fontSize: 8 }}
-                            key={index}
-                          >
-                            {turn.open} - {turn.close}
-                          </Text>
-                        ))}
-                      </View>
+            {/* Horario */}
+            <View style={{...styles.card, marginHorizontal: 5}}>
+              <Text style={{ ...styles.text, alignSelf: "center", marginBottom: 10, fontSize: 16}}>
+                Horario
+              </Text>
+              {Object.entries(business_data.shedule).map(([day, block]) => (
+                <View key={day} style={{ marginBottom: 8 }}>
+                  <View style={{ flexDirection: "row", width: "100%" }}>
+                    <Text style={{ fontWeight: "bold", color: "#000", fontSize: 12 }}>
+                      {day === "lunes" && "Lunes"}
+                      {day === "martes" && "Martes"}
+                      {day === "miercoles" && "Miércoles"}
+                      {day === "jueves" && "Jueves"}
+                      {day === "viernes" && "Viernes"}
+                      {day === "sabado" && "Sábado"}
+                      {day === "domingo" && "Domingo"}
+                    </Text>
+                    <View style={{ flex: 1, alignItems: "flex-end" }}>
+                      {block.map((turn, index) => (
+                        <Text style={{ color: colors.regularText, fontSize: 12 }} key={index}>
+                          {turn.open} - {turn.close}
+                        </Text>
+                      ))}
                     </View>
                   </View>
-                ))}
-              </View>
+                </View>
+              ))}
+            </View>
 
-              <View style={styles.card}>
-                <Text
-                  style={{
-                    ...styles.text,
-                    alignSelf: "center",
-                    marginBottom: 10,
-                  }}
-                >
-                  Contacto
+            {/* Contacto */}
+            <View style={{...styles.card, marginHorizontal: 10}}>
+              <Text style={{ ...styles.text, alignSelf: "center", marginBottom: 10 }}>
+                Contacto
+              </Text>
+              <View style={{ flexDirection: "row" }}>
+                <Ionicons name="call-outline" size={20} color={colors.mainBlue} />
+                <Text style={{ ...styles.text, fontSize: 12, paddingLeft: 10 }}>
+                  {business_data.info.phone}
                 </Text>
-                <View style={{ flexDirection: "row" }}>
-                  <Ionicons
-                    name="call-outline"
-                    size={20}
-                    color={colors.mainBlue}
-                  ></Ionicons>
-                  <Text
-                    style={{
-                      ...styles.text,
-                      fontSize: 12,
-                      paddingLeft: 10,
-                      width: "85%",
-                    }}
-                  >
-                    {business_data.info.email}
-                  </Text>
-                </View>
-                <View style={{ flexDirection: "row", marginTop: 15 }}>
-                  <Ionicons
-                    name="mail-outline"
-                    size={20}
-                    color={colors.mainBlue}
-                  ></Ionicons>
-                  <Text
-                    style={{ ...styles.text, fontSize: 12, paddingLeft: 10 }}
-                  >
-                    {business_data.info.phone}
-                  </Text>
-                </View>
+              </View>
+              <View style={{ flexDirection: "row", marginTop: 15 }}>
+                <Ionicons name="mail-outline" size={20} color={colors.mainBlue} />
+                <Text style={{ ...styles.text, fontSize: 12, paddingLeft: 10 }}>
+                  {business_data.info.email}
+                </Text>
               </View>
             </View>
-          </View>
+          </View>        
         </View>
       </ScrollView>
     </SafeAreaView>

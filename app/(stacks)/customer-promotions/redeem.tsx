@@ -40,7 +40,7 @@ export default function RedeemView () {
         if (result == true) {
             clearInterval(interval);
             router.dismissAll();
-            router.replace(`/promotions/completed?promotion-id=${promotion_id}`);
+            router.replace(`/customer-promotions/completed?promotion-id=${promotion_id}`);
         }
     }, 3000); // comprobar cada tres segundos
 

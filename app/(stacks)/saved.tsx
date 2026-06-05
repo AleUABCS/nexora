@@ -32,7 +32,7 @@ export default function SavedView() {
                     <View
                     style = {globalStyles.listItem}
                     >
-                        <TouchableOpacity style = {{width: '80%'}} onPress={() => router.push(`/(business)${item.id}`)}>
+                        <TouchableOpacity style = {{width: '80%'}} onPress={() => router.push(`/(business)/${item.id}`)}>
                             <Text style={globalStyles.listItemText}>{item.name}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity onPress={() => removeSaved(item.id.toString())}>

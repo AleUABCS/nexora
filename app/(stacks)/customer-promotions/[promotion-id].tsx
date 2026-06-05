@@ -34,7 +34,7 @@ export default function PromotionView () {
 
                 <TouchableOpacity 
                 style = {{ ...globalStyles.button, backgroundColor: colors.promotion, marginTop: 50, alignSelf: "flex-end"}}
-                onPress={() => router.push(`/promotions/redeem?promotion-id=${promotion_id}`)}
+                onPress={() => router.push(`/customer-promotions/redeem?promotion-id=${promotion_id}`)}
                 >
                     <Text style = {{color: '#ffffff', fontSize: 16, fontWeight: 'bold'}}>Conseguir ficha</Text>
                 </TouchableOpacity>

@@ -55,7 +55,7 @@ export default function CompletedView () {
                         onPress={
                             () => {
                                 router.dismissAll()
-                                router.push('/promotions')
+                                router.push('/customer-promotions')
                         }}
                         >
                     <Text style = {{color: '#FFF', fontSize: 16, fontWeight: 'bold'}}>Volver</Text>

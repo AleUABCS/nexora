@@ -71,6 +71,15 @@ export default function PromotionsView () {
                         <Ionicons name = 'add' color= '#FFFFFF' size = {24} style = {{paddingRight: 5}}></Ionicons>
                         <Text style = {globalStyles.buttonText}>Crear promoción</Text>
                     </TouchableOpacity>
+                                        {/* Botón "Crear promoción" */}
+                    <TouchableOpacity 
+                    style = {{...globalStyles.button, width: '100%', backgroundColor: colors.promotion}}
+                    onPress={ () => router.push('/promotions/redeem')}
+                    >
+                        <Ionicons name = 'cash' color= '#FFFFFF' size = {24} style = {{paddingRight: 5}}></Ionicons>
+                        <Text style = {globalStyles.buttonText}>Canjear promoción</Text>
+                    </TouchableOpacity>
+
                 </View>
 
                 

@@ -5,6 +5,7 @@ import { getFirestore } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Dimensions,
   Image,
   Keyboard,
@@ -20,6 +21,7 @@ import {
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Select, { ISelectItem } from "rn-custom-select-dropdown";
+import { colors } from "../../../constants/globalStyles";
 import appFirebase from "../../../credenciales.js";
 import { pickImages, useBusinessStore } from "../../../store/business-store";
 
@@ -63,6 +65,27 @@ export default function EditBusinessScreen() {
     router.back()
   }
 
+  const handleDeleteBusiness = async () => {
+    Alert.alert(
+      'Eliminar negocio',
+      '¿Estas seguro de que quieres eliminar tu negocio? Esta acción no se puede deshacer',
+      [
+          {
+              text: 'Aceptar',
+              onPress: () => {
+                // Eliminar negocio en el back ayuda
+                
+                router.dismissAll()
+              }
+          },
+          {
+              text: 'Cancelar',
+              style: 'cancel'
+          }
+      ]
+    )
+    router.back()
+  }
 
   const { addImage, images, setImages, clearImages } = useBusinessStore();
 
@@ -293,6 +316,12 @@ export default function EditBusinessScreen() {
               onPress={handleUpdateBusiness}
             >
               <Text style={styles.buttonText}>Guardar cambios</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{...styles.button, marginTop: 10, backgroundColor: colors.warn}}
+              onPress={handleDeleteBusiness}
+            >
+              <Text style={styles.buttonText}>Eliminar negocio</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>

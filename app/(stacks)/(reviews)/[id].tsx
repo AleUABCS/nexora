@@ -1,3 +1,4 @@
+import { useReviewsStore } from '@/store/review-store';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -9,10 +10,20 @@ export default function ReviewDetailsView () {
     
     // id de la reseña. se obtiene con la id de la reseña a la que se le hizo click en la pantalla de reseñas
     const {id} = useLocalSearchParams()
+    
     // Aquí va la información de la review, me imagino que la conseguirás con la id en la base de datos
     // Datos necesarios: Estrellas, comentario de la reseña, id del negocio.
     // En este arreglo van a ir los datos reales.
     const review_data =  {review_id: 1, business_name: 'Nombre del negocio', stars: 4, description: 'No me gustó, etc comentario...', business_id: 1}
+
+    const { removeReview } = useReviewsStore ()
+
+    function handleRemoveReview (id: string) {
+        // Se tiene que eliminar en el back en el store/review-store.ts
+        removeReview(id)
+
+        router.back()
+    }
 
     const alertOnDelete = () => {
         Alert.alert(
@@ -20,19 +31,11 @@ export default function ReviewDetailsView () {
             '¿Quieres eliminar esta reseña?',
             [
                 {text: 'Cancelar', style: 'cancel'},
-                {text: 'Eliminar', onPress: () => deleteReview(review_data.review_id)}
+                {text: 'Eliminar', onPress: () => handleRemoveReview(review_data.review_id.toString())}
             ]
         )
     }
 
-    const deleteReview = (review_id: any) => {
-        // Aquí se tiene que eliminar la reseña en el back
-
-
-        // Regresar a la pantalla de reseñas
-        // Aún falta que se elmine la reseña de la pantalla de reseñas también
-        router.back()
-    }
 
     return (
         // Contenedor padre
@@ -88,7 +91,7 @@ export default function ReviewDetailsView () {
                         {/* Botón "Ver negocio" */}
                         <TouchableOpacity 
                         style = {{...globalStyles.button, width: '100%'}}
-                        // onPress={ () => router.push('')}
+                        onPress={ () => router.push(`/(stacks)/(business)/${id}`)}
                         // Aquí tiene que llevar al negocio con la id. Aún no ha sido programada la pantalla de negocio/[id]
                         >
                             <Ionicons name = 'arrow-redo-outline' color= '#FFFFFF' size = {24} style = {{paddingRight: 5}}></Ionicons>

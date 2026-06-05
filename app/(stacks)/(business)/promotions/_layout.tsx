@@ -15,6 +15,10 @@ export default function PromotionsLayout () {
         name="new" 
         options={{ headerShown: false }} 
       />
+      <Stack.Screen 
+        name="redeem" 
+        options={{ headerShown: false }} 
+      />
     </Stack>
   );
 }

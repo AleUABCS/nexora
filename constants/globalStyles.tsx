@@ -6,7 +6,8 @@ export const colors = {
     regularText: "#656565",
     secondaryBlue: "#E7EEFF",
     promotion: "#3900BF",
-    promotionText: "#2A008C"
+    promotionText: "#2A008C",
+    disabled: '#CCCCCC',
 }
 
 export const iconStyles = {
