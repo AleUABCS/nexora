@@ -43,7 +43,7 @@ export default function PromotionsView () {
                                 justifyContent: 'space-between',
                                 flex: 1
                                 }}
-                                onPress={() => router.push(`/promotions/${item.id}` as Href)}
+                                onPress={() => router.push(`/customer-promotions/${item.id}` as Href)}
                                 >
                                 <Text 
                                     numberOfLines = {1} 
