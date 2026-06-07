@@ -231,7 +231,7 @@ export default function BusinessView() {
                   {" "}
                   {business_data.info.rate} estrellas
                 </Text>
-                <Text style={{ color: colors.placeHolder, paddingLeft: 5 }}
+                <Text style={{ color: colors.placeHolder, paddingLeft: 5, textDecorationLine: 'underline' }}
                   onPress={() => router.push(
                     {
                       pathname: '/(stacks)/(business)/(reviews)/reviews',

@@ -16,7 +16,7 @@ export default function BusinessReviewView() {
   ];
 
   const renderStars = (count: number) => (
-    <View style={{ flexDirection: "row", marginBottom: 10 }}>
+    <View style={{ flexDirection: "row", marginBottom: 15 }}>
       {Array.from({ length: 5 }, (_, i) => (
         <Ionicons
           key={i}
@@ -39,7 +39,7 @@ export default function BusinessReviewView() {
             contentContainerStyle={{ paddingTop: 20 }}
             renderItem={({ item }) => (
               <View style={{ ...globalStyles.card, marginBottom: 12, marginHorizontal: 10 }}>
-                <Text style={{ fontWeight: "bold", marginBottom: 2 }}>{item.username}</Text>
+                <Text style={{ fontWeight: "bold", marginBottom: 8 }}>{item.username}</Text>
                 {renderStars(item.stars)}
                 <Text>{item.description}</Text>
               </View>

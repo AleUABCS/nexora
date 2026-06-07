@@ -26,6 +26,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { router } from "expo-router";
+import { Image } from "react-native";
+import { colors } from "../../constants/globalStyles";
 import appFirebase from "../../credenciales.js";
 
 const db = getFirestore(appFirebase);
@@ -64,6 +66,8 @@ const CATEGORIES = [
 
 export default function HomeScreen() {
   const [negocios, setNegocios] = useState<any[]>([]);
+  const estrellas = 4.4
+  const imagen_negocio = require('../../assets/images/cuyo2.jpg')
 
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<
     string | null
@@ -177,23 +181,53 @@ export default function HomeScreen() {
           router.push(`/(stacks)/(business)/${item.id}`);
         }}
       >
-        <View style={styles.businessCard}>
-          <Text style={styles.businessName}>{item.nombreNegocio}</Text>
+        <View style={{...styles.businessCard, flexDirection: 'row', height: 170}}>
 
-          <Text style={styles.businessDetail}>
-            Categoría: {item.categoriaNegocio || "Sin categoría"}
-          </Text>
+          <View style = {{marginRight: 20}}>
+            <Image
+            source={imagen_negocio}
+            style = {{
+              width: 130,
+              height: 130,
+              borderRadius: 12,
+            }}
+            />
+          </View>
 
-          <Text style={styles.businessDetail}>
-            Descripción: {item.descripcion}
-          </Text>
+          <View style = {{marginRight:10}}>
 
-          <Text style={styles.businessDetail}>
-            Teléfono: {item.telefonoNegocio}
-          </Text>
+            <Text 
+              style={{...styles.businessName, width: 200}}
+              numberOfLines={1}
+            >{item.nombreNegocio}</Text>
 
-          <Text style={styles.businessDetail}>Email: {item.emailNegocio}</Text>
-        </View>
+            <Text style={styles.businessDetail}>
+              {item.categoriaNegocio || "Sin categoría"}
+            </Text>
+
+            <Text 
+              style = {{...styles.businessDetail, width: '40%'}}
+              numberOfLines={2}
+              ellipsizeMode='tail'
+              >
+              {item.descripcion}
+            </Text>
+
+            <View style={{ flexDirection: "row", marginBottom: 10 }}>
+              {Array.from({ length: 5 }, (_, i) => (
+                <Ionicons
+                  key={i}
+                  name={i < Math.round(estrellas) ? "star" : "star-outline"}
+                  size={16}
+                  color={colors.mainBlue}
+                  style = {{marginTop: 4}}
+                />
+              ))}
+              </View>  
+
+          </View>    
+
+    </View>
       </TouchableOpacity>
     );
   };
@@ -401,6 +435,6 @@ const styles = StyleSheet.create({
 
     color: "#667085",
 
-    marginBottom: 2,
+    marginVertical: 3,
   },
 });
