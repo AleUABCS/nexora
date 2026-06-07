@@ -80,7 +80,8 @@ export default function NewPromotionView () {
                             <TextInput  
                                 style = {{...styles.textArea, width: 50, textAlign: 'center'}}
                                 value={times.toString()}
-                                keyboardType="number-pad"
+                                editable={false}
+                                
                             />
                                 
                             <TouchableOpacity style = {styles.timesButton}
