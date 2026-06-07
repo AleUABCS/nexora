@@ -15,10 +15,10 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Dimensions,
   FlatList,
   Image,
-  Alert,
   Linking,
   ScrollView,
   StyleSheet,
@@ -231,7 +231,14 @@ export default function BusinessView() {
                   {" "}
                   {business_data.info.rate} estrellas
                 </Text>
-                <Text style={{ color: colors.placeHolder, paddingLeft: 5 }}>
+                <Text style={{ color: colors.placeHolder, paddingLeft: 5 }}
+                  onPress={() => router.push(
+                    {
+                      pathname: '/(stacks)/(business)/(reviews)/reviews',
+                      params: {business_id: business_data.info.business_id}
+                    }
+                  )}
+                >
                   {" "}
                   {business_data.info.reviews} reseñas{" "}
                 </Text>
