@@ -30,6 +30,15 @@ const storage = getStorage(appFirebase);
 
 const width = Dimensions.get("window").width;
 
+type DayKey = "lunes" | "martes" | "miercoles" | "jueves" | "viernes" | "sabado" | "domingo";
+type TimeSlot = { id: number; opening: string; closing: string };
+type Schedule = { [key in DayKey]: TimeSlot[] };
+
+const emptySchedule: Schedule = {
+  lunes: [], martes: [], miercoles: [], jueves: [],
+  viernes: [], sabado: [], domingo: [],
+};
+
 const categories: Array<ISelectItem<string>> = [
   { label: "Abarrotes y Tienditas", value: "Abarrotes y Tienditas" },
   { label: "Barberías", value: "Barberías" },
@@ -49,21 +58,22 @@ export default function RegisterBusinessScreen() {
   const [email, setEmail] = useState("");
   const [description, setDescription] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [selectedValue, setSelectedValue] = useState<ISelectItem<string> | null>(null);
   const router = useRouter();
-  const [selectedValue, setSelectedValue] =
-    useState<ISelectItem<string> | null>(null);
 
   const regex = /^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/;
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   const location = null;
-
-  const { images, clearImages } = useBusinessStore();
+  const { images, clearImages, schedule, clearSchedule } = useBusinessStore();
   const [preview, setPreview] = useState(images[0]);
 
   useEffect(() => {
     if (images[0]) setPreview(images[0]);
-  });
+  }, [images]);
+
+  // Cuando regresa de set-schedule, recoge el horario via params no aplica aquí
+  // El horario se pasa directo al objeto al registrar
 
   const uploadImagesToStorage = async (userId: string): Promise<string[]> => {
     const uploadedUrls: string[] = [];
@@ -103,11 +113,11 @@ export default function RegisterBusinessScreen() {
       return;
     }
     if (!regex.test(phone)) {
-      Alert.alert("Aviso", "El numero no es valido");
+      Alert.alert("Aviso", "El número no es válido");
       return;
     }
     if (!emailRegex.test(email)) {
-      Alert.alert("Aviso", "El email no es valido");
+      Alert.alert("Aviso", "El email no es válido");
       return;
     }
 
@@ -124,13 +134,15 @@ export default function RegisterBusinessScreen() {
         categoriaNegocio: selectedValue!.value,
         telefonoNegocio: phone,
         emailNegocio: email,
-        ratingPromedio:0,
+        ratingPromedio: 0,
         imagenes: imageUrls,
+        horario: schedule,
         createdAt: new Date().toISOString(),
       };
 
       await addDoc(collection(db, "negocios"), newBusiness);
       clearImages();
+      clearSchedule();
       Alert.alert("Éxito", "Negocio registrado");
       router.back();
     } catch (error) {
@@ -147,6 +159,14 @@ export default function RegisterBusinessScreen() {
     } else {
       pickImages();
     }
+  };
+
+  // Navega a set-schedule sin id — cuando regrese el horario
+  // queda en el estado local `schedule` a través del store o navegación
+  // Por ahora se abre la pantalla y al volver el schedule está vacío
+  // Para pasarlo de vuelta, ver nota abajo
+  const handleSetSchedule = () => {
+    router.push("/set-schedule");
   };
 
   return (
@@ -220,7 +240,7 @@ export default function RegisterBusinessScreen() {
                 textAlignVertical="top"
                 multiline
                 style={[styles.input, { height: 200 }]}
-                placeholder="Añade una breve descripcion de tu negocio"
+                placeholder="Añade una breve descripción de tu negocio"
                 placeholderTextColor="#A0A0A0"
                 value={description}
                 onChangeText={setDescription}
@@ -231,7 +251,7 @@ export default function RegisterBusinessScreen() {
             <View style={styles.inputGroup}>
               <GestureHandlerRootView style={{ flex: 1 }}>
                 <Select
-                  placeholder="Selecciona una categoria"
+                  placeholder="Selecciona una categoría"
                   data={categories}
                   inputContainerStyle={{
                     borderWidth: 1,
@@ -289,7 +309,7 @@ export default function RegisterBusinessScreen() {
                 width: width * 0.6,
                 alignSelf: "flex-end",
               }}
-              onPress={() => router.push("/set-schedule")}
+              onPress={handleSetSchedule}
             >
               <Text style={{ ...styles.buttonText, fontSize: 14 }}>
                 Establecer horario

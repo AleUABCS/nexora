@@ -31,9 +31,8 @@ import Select, { ISelectItem } from "rn-custom-select-dropdown";
 import { colors } from "../../../constants/globalStyles";
 import appFirebase from "../../../credenciales.js";
 import { pickImages, useBusinessStore } from "../../../store/business-store";
-const storage = getStorage(appFirebase);
 
-const auth = getAuth(appFirebase);
+const storage = getStorage(appFirebase);
 const db = getFirestore(appFirebase);
 const width = Dimensions.get("window").width;
 
@@ -64,8 +63,11 @@ export default function EditBusinessScreen() {
   const regex = /^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/;
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  const location = null; // Backend: Obtener ubicación del negocio
+  const location = null;
 
+  const { images, setImages, clearImages, schedule, setSchedule, clearSchedule } = useBusinessStore();
+
+  // Cargar datos del negocio
   useEffect(() => {
     const cargarDatosNegocio = async () => {
       try {
@@ -82,14 +84,22 @@ export default function EditBusinessScreen() {
 
           if (datos.categoriaNegocio) {
             setSelectedValue({
-              label: datos.categoria,
-              value: datos.categoria,
+              label: datos.categoriaNegocio,
+              value: datos.categoriaNegocio,
             });
           }
+
           if (datos.imagenes && datos.imagenes.length > 0) {
             setImages(datos.imagenes);
           } else {
             clearImages();
+          }
+
+          // Cargar horario al store para que set-schedule lo reciba
+          if (datos.horario) {
+            setSchedule(datos.horario);
+          } else {
+            clearSchedule();
           }
         } else {
           Alert.alert("Error", "No se encontraron los datos del negocio.");
@@ -140,6 +150,8 @@ export default function EditBusinessScreen() {
         telefonoNegocio: phone,
         categoriaNegocio: selectedValue?.value,
         imagenes: imageUrls,
+        // El horario se guarda desde set-schedule directamente en Firestore
+        // solo se incluye aquí si se quiere sobreescribir con lo del store
       });
 
       Alert.alert("Éxito", "Negocio actualizado correctamente.");
@@ -151,6 +163,7 @@ export default function EditBusinessScreen() {
       setLoading(false);
     }
   };
+
   const handleDeleteBusiness = async () => {
     Alert.alert(
       "Eliminar negocio",
@@ -161,18 +174,12 @@ export default function EditBusinessScreen() {
           onPress: async () => {
             try {
               const docRef = doc(db, "negocios", id as string);
-
               await deleteDoc(docRef);
-
-              Alert.alert(
-                "Éxito",
-                "El negocio ha sido eliminado correctamente.",
-              );
+              Alert.alert("Éxito", "El negocio ha sido eliminado correctamente.");
             } catch (error) {
               console.error("Error al eliminar el negocio:", error);
               Alert.alert("Error", "No se pudo eliminar el negocio.");
             }
-
             router.dismissAll();
           },
         },
@@ -183,8 +190,6 @@ export default function EditBusinessScreen() {
       ],
     );
   };
-
-  const {images, setImages, clearImages } = useBusinessStore();
 
   const askForImages = () => {
     if (images.length > 0) {
@@ -198,7 +203,7 @@ export default function EditBusinessScreen() {
 
   useEffect(() => {
     if (images[0]) setPreview(images[0]);
-  });
+  }, [images]);
 
   const validateFields = () => {
     if (
@@ -240,13 +245,12 @@ export default function EditBusinessScreen() {
           scrollEventThrottle={16}
           nestedScrollEnabled={true}
         >
-          {/* Título de la pantalla */}
           <View style={styles.headerContainer}>
             <Text style={styles.titleText}>Editar negocio</Text>
           </View>
 
           <View style={styles.card}>
-            {/* Contenedor de imagen */}
+            {/* Imagen */}
             <View style={styles.setImageContainer}>
               <Image
                 source={
@@ -278,6 +282,7 @@ export default function EditBusinessScreen() {
               </TouchableOpacity>
             </View>
 
+            {/* Nombre */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Nombre del Negocio</Text>
               <TextInput
@@ -290,6 +295,7 @@ export default function EditBusinessScreen() {
               />
             </View>
 
+            {/* Descripción */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Descripción</Text>
               <TextInput
@@ -303,6 +309,7 @@ export default function EditBusinessScreen() {
               />
             </View>
 
+            {/* Categoría */}
             <View style={styles.inputGroup}>
               <GestureHandlerRootView style={{ flex: 1 }}>
                 <Select
@@ -330,6 +337,7 @@ export default function EditBusinessScreen() {
               </GestureHandlerRootView>
             </View>
 
+            {/* Correo */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Correo de contacto</Text>
               <TextInput
@@ -343,6 +351,7 @@ export default function EditBusinessScreen() {
               />
             </View>
 
+            {/* Teléfono */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Teléfono de contacto</Text>
               <TextInput
@@ -355,7 +364,7 @@ export default function EditBusinessScreen() {
               />
             </View>
 
-            {/* Botón para editar horario */}
+            {/* Botón editar horario — pasa el id para que set-schedule guarde directo en Firestore */}
             <TouchableOpacity
               style={{
                 ...styles.button,
@@ -374,7 +383,7 @@ export default function EditBusinessScreen() {
               </Text>
             </TouchableOpacity>
 
-            {/* Cuadro de ubicación en el mapa */}
+            {/* Ubicación */}
             <View style={styles.locationContainer}>
               <View style={styles.card}>
                 <Text style={styles.label}>Ubicación</Text>
@@ -414,6 +423,7 @@ export default function EditBusinessScreen() {
             >
               <Text style={styles.buttonText}>Guardar cambios</Text>
             </TouchableOpacity>
+
             <TouchableOpacity
               style={{
                 ...styles.button,

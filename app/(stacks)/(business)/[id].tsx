@@ -33,7 +33,7 @@ import { Text } from "../../../components/Themed";
 import { colors, globalStyles } from "../../../constants/globalStyles";
 import appFirebase from "../../../credenciales.js";
 
-const auth = getAuth(appFirebase)
+const auth = getAuth(appFirebase);
 
 const db = getFirestore(appFirebase);
 
@@ -126,25 +126,26 @@ export default function BusinessView() {
     if (id) calcularPromedioYTotal();
   }, [id]);
 
-    const useCustomerPromotions = (business_id: string, user_id: string) => {
+  const useCustomerPromotions = (business_id: string, user_id: string) => {
     const [promotions, setPromotions] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
       const now = new Date();
 
-      const ref = collection(db, 'negocios', business_id, 'promociones');
-      const q = query(
-        ref,
-        where('endDate', '>=', Timestamp.fromDate(now))
-      );
+      const ref = collection(db, "negocios", business_id, "promociones");
+      const q = query(ref, where("endDate", ">=", Timestamp.fromDate(now)));
 
       const unsub = onSnapshot(q, async (snapshot) => {
         const data = await Promise.all(
           snapshot.docs.map(async (docSnap) => {
             const d = docSnap.data();
 
-            const userPromoRef = doc(db, 'userPromotions', `${user_id}_${docSnap.id}`);
+            const userPromoRef = doc(
+              db,
+              "userPromotions",
+              `${user_id}_${docSnap.id}`,
+            );
             const userPromoSnap = await getDoc(userPromoRef);
             const tokensEarned = userPromoSnap.exists()
               ? userPromoSnap.data().tokensEarned
@@ -153,11 +154,11 @@ export default function BusinessView() {
             return {
               id: docSnap.id,
               ...d,
-              startDate: d.startDate?.toDate().toLocaleDateString('es-MX'),
-              endDate: d.endDate?.toDate().toLocaleDateString('es-MX'),
+              startDate: d.startDate?.toDate().toLocaleDateString("es-MX"),
+              endDate: d.endDate?.toDate().toLocaleDateString("es-MX"),
               tokensEarned,
             };
-          })
+          }),
         );
 
         setPromotions(data);
@@ -170,7 +171,10 @@ export default function BusinessView() {
     return { promotions, loading };
   };
 
-  const {promotions, loading} = useCustomerPromotions(id as string, auth.currentUser?.uid as string)
+  const { promotions, loading } = useCustomerPromotions(
+    id as string,
+    auth.currentUser?.uid as string,
+  );
 
   if (cargando)
     return <ActivityIndicator size="large" style={{ marginTop: 50 }} />;
@@ -215,8 +219,6 @@ export default function BusinessView() {
     },
   };
 
-
-  
   return (
     <SafeAreaView style={globalStyles.mainContainer}>
       <ScrollView>
@@ -278,13 +280,18 @@ export default function BusinessView() {
                   {" "}
                   {business_data.info.rate} estrellas
                 </Text>
-                <Text style={{ color: colors.placeHolder, paddingLeft: 5, textDecorationLine: 'underline' }}
-                  onPress={() => router.push(
-                    {
-                      pathname: '/(stacks)/(business)/(reviews)/reviews',
-                      params: {business_id: business_data.info.business_id}
-                    }
-                  )}
+                <Text
+                  style={{
+                    color: colors.placeHolder,
+                    paddingLeft: 5,
+                    textDecorationLine: "underline",
+                  }}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/(stacks)/(business)/(reviews)/reviews",
+                      params: { business_id: business_data.info.business_id },
+                    })
+                  }
                 >
                   {" "}
                   {business_data.info.reviews} reseñas{" "}
@@ -292,7 +299,9 @@ export default function BusinessView() {
               </View>
               <Text
                 onPress={() =>
-                  router.push(`/(reviews)/new?id=${business_data.info.business_id}`)
+                  router.push(
+                    `/(reviews)/new?id=${business_data.info.business_id}`,
+                  )
                 }
                 style={{
                   fontSize: 14,
@@ -357,10 +366,16 @@ export default function BusinessView() {
                   key={index}
                   onPress={() => {
                     router.push({
-                      pathname: `/customer-promotions/${promo.id}`,
-                      params: {id: promo.id, name: promo.name, description: promo.description, times: promo.totalTokens, start_date: promo.startDate, end_date: promo.endDate, tokens_earned: promo.tokensEarned, business_id: business_data.info.business_id}
-                    })
-                    console.log ('id del negocio: ' + business_data.info.business_id)
+                      pathname: "/customer-promotions/[promotion-id]",
+                      params: {
+                        "promotion-id": promo.id,
+                        name: promo.name,
+                        description: promo.description,
+                      },
+                    });
+                    console.log(
+                      "id del negocio: " + business_data.info.business_id,
+                    );
                   }}
                   style={styles.promotion}
                 >
@@ -412,37 +427,61 @@ export default function BusinessView() {
               >
                 Horario
               </Text>
-              {Object.entries(business_data.shedule).map(([day, block]) => (
-                <View key={day} style={{ marginBottom: 8 }}>
-                  <View style={{ flexDirection: "row", width: "100%" }}>
-                    <Text
-                      style={{
-                        fontWeight: "bold",
-                        color: "#000",
-                        fontSize: 14,
-                      }}
-                    >
-                      {day === "lunes" && "Lunes"}
-                      {day === "martes" && "Martes"}
-                      {day === "miercoles" && "Miércoles"}
-                      {day === "jueves" && "Jueves"}
-                      {day === "viernes" && "Viernes"}
-                      {day === "sabado" && "Sábado"}
-                      {day === "domingo" && "Domingo"}
-                    </Text>
-                    <View style={{ flex: 1, alignItems: "flex-end" }}>
-                      {block.map((turn, index) => (
+              {negocio.horario ? (
+                Object.entries(negocio.horario).map(
+                  ([day, slots]: [string, any]) => (
+                    <View key={day} style={{ marginBottom: 8 }}>
+                      <View style={{ flexDirection: "row", width: "100%" }}>
                         <Text
-                          style={{ color: colors.regularText, fontSize: 12 }}
-                          key={index}
+                          style={{
+                            fontWeight: "bold",
+                            color: "#000",
+                            fontSize: 14,
+                          }}
                         >
-                          {turn.open} - {turn.close}
+                          {day === "lunes" && "Lunes"}
+                          {day === "martes" && "Martes"}
+                          {day === "miercoles" && "Miércoles"}
+                          {day === "jueves" && "Jueves"}
+                          {day === "viernes" && "Viernes"}
+                          {day === "sabado" && "Sábado"}
+                          {day === "domingo" && "Domingo"}
                         </Text>
-                      ))}
+                        <View style={{ flex: 1, alignItems: "flex-end" }}>
+                          {slots.length === 0 ? (
+                            <Text
+                              style={{
+                                color: colors.placeHolder,
+                                fontSize: 12,
+                              }}
+                            >
+                              Cerrado
+                            </Text>
+                          ) : (
+                            slots.map((slot: any, index: number) => (
+                              <Text
+                                style={{
+                                  color: colors.regularText,
+                                  fontSize: 12,
+                                }}
+                                key={index}
+                              >
+                                {slot.opening} - {slot.closing}
+                              </Text>
+                            ))
+                          )}
+                        </View>
+                      </View>
                     </View>
-                  </View>
-                </View>
-              ))}
+                  ),
+                )
+              ) : (
+                <Text
+                  style={{ color: colors.placeHolder, textAlign: "center" }}
+                >
+                  Sin horario registrado
+                </Text>
+              )}
             </View>
 
             {/* Contacto */}
