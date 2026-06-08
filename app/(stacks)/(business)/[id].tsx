@@ -367,12 +367,8 @@ export default function BusinessView() {
                   key={index}
                   onPress={() => {
                     router.push({
-                      pathname: "/customer-promotions/[promotion-id]",
-                      params: {
-                        "promotion-id": promo.id,
-                        name: promo.name,
-                        description: promo.description,
-                      },
+                      pathname: `/customer-promotions/${promo.id}`,
+                      params: {id: promo.id, name: promo.name, description: promo.description, times: promo.totalTokens, start_date: promo.startDate, end_date: promo.endDate, tokens_earned: promo.tokensEarned, business_id: business_data.info.business_id}
                     });
                     console.log(
                       "id del negocio: " + business_data.info.business_id,

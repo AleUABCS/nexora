@@ -92,7 +92,7 @@ export default function PromotionsView() {
 
                 <View style={{ ...globalStyles.card, maxHeight: '50%', marginTop: 20 }}>
                     <FlatList
-                        data={myPromotions}
+                        data={businessPromotions}
                         keyExtractor={(item => item.id.toString())}
                         renderItem={({ item }) => (
                             <View style={globalStyles.listItem}>
