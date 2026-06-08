@@ -2,28 +2,53 @@ import { colors, globalStyles } from "@/constants/globalStyles";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router, useLocalSearchParams } from "expo-router";
+import { getAuth } from "firebase/auth";
+import { addDoc, collection, getFirestore, serverTimestamp, Timestamp } from "firebase/firestore";
 import { useState } from "react";
 import { Alert, Image, Keyboard, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import appFirebase from "../../../../credenciales.js";
+
+const db = getFirestore(appFirebase);
+const auth = getAuth(appFirebase)
 
 const chip_icon = require('../../../../assets/images/chip.png')
 
 export default function NewPromotionView () {
-    const {'id' : business_id} = useLocalSearchParams()
-
+    const {business_id} = useLocalSearchParams()
     const [name, setName] = useState('')
     const [description, setDescription] = useState('')
-    const [times, setTimes] = useState(0)
+    const [times, setTimes] = useState(1)
 
     const [startDate, setStartDate] = useState(new Date());
     const [endDate, setEndDate] = useState(new Date());
     const [showStart, setShowStart] = useState(Platform.OS === 'ios');
     const [showEnd, setShowEnd] = useState(Platform.OS === 'ios');
 
-    function createPromotion () {
+    const createPromotion = async (business_id: any, data: any) => {
         // Guardar promoción en el back
+        const {name, description, startDate, endDate, times } = data
+        const ref = collection(db, 'negocios', business_id, 'promociones')
 
-        router.back()
+        if (name == '' && description == '') {
+            Alert.alert('Campos vacíos', 'Tienes que llenar todos los campos')
+        } else {
+
+            
+            await addDoc(ref, {
+                name,
+                description,
+                startDate : Timestamp.fromDate(new Date(startDate)),
+                endDate : Timestamp.fromDate(new Date(endDate)),
+                totalTokens: Number(times),
+                isActive: true,
+                createdBy: auth.currentUser?.uid,
+                createdAt: serverTimestamp()
+            })
+            
+            // console.log(name, description, startDate, endDate, times)
+            router.back()
+        }
     }
 
     return (
@@ -72,7 +97,7 @@ export default function NewPromotionView () {
                                 onPress={() => Alert.alert('Fichas', 'La cantidad de fichas necesarias indica cuántas veces el cliente tiene que validar la promoción para completarla y conseguirla')}
                                 >Fichas necesarias </Text>
                             <TouchableOpacity style = {styles.timesButton}
-                                onPress={() => setTimes(times >= 1 ? times - 1: 0)}
+                                onPress={() => setTimes(times > 1 ? times - 1 : 1)}
                                 >
                                 <Ionicons name='remove' size={20}></Ionicons>
                             </TouchableOpacity>
@@ -143,7 +168,7 @@ export default function NewPromotionView () {
                         </View>
 
                         <TouchableOpacity style={{ ...globalStyles.button, marginTop: 30, height: 50, width: '60%', alignSelf: 'flex-end' }}
-                            onPress={() => createPromotion()}
+                            onPress={() => createPromotion(business_id, {name, description, startDate, endDate, times})}
                         >
                             <Text style={{ ...globalStyles.buttonText, fontSize: 14 }}>Publicar promoción</Text>
                         </TouchableOpacity>

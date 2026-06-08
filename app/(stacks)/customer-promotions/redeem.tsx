@@ -1,23 +1,23 @@
 import { colors, globalStyles } from "@/constants/globalStyles"
+import appFirebase from "@/credenciales"
 import { router, useLocalSearchParams } from "expo-router"
-import { useEffect } from "react"
+import { getAuth } from "firebase/auth"
+import { doc, getDoc, getFirestore, serverTimestamp, setDoc, Timestamp } from "firebase/firestore"
+import { useEffect, useState } from "react"
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
+
+const auth = getAuth(appFirebase)
+
+const db = getFirestore(appFirebase);
 
 const chip_icon = require('../../../assets/images/chip.png')
 
 export default function RedeemView () {
-    
-    const { 'promotion-id' : promotion_id } = useLocalSearchParams()
-
-    const promotion_info = {
-        id: promotion_id, // id de la promoción
-        completed: 2, // Cuantas fichas lleva
-        needed: 3, // Cuantas necesita para conseguir la promoción       
-        generated_code: 1234 // Se tiene que generar un código de cuatro dígitos y una función para validarlo 
-    }
-
-    console.log(promotion_info)
+    const [code, setCode] = useState<string>('')
+    const [loadingCode, setLoadingCode] = useState(true)
+    const { promotion_id, business_id } = useLocalSearchParams()
+    console.log('busindisadnaisdnasid: ' + business_id)
 
     function validatePromotion () : boolean {
         if (true) {
@@ -27,6 +27,42 @@ export default function RedeemView () {
         else { }
     }
 
+    const generateValidationCode = async (user_id: any, promotion_id: any, business_id: any) => {
+
+    // En lugar de query, buscar directamente si existe algún código activo
+    // Simplemente generamos uno nuevo siempre, o reutilizamos buscando diferente
+    
+    const code = String(Math.floor(1000 + Math.random() * 9000));
+
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 5);
+
+    await setDoc(doc(db, 'validationCodes', code), {
+        code,
+        user_id,
+        promotion_id,
+        business_id,
+        createdAt: serverTimestamp(),
+        expiresAt: Timestamp.fromDate(expiresAt),
+        used: false,
+    });
+
+    return code;
+    };
+    
+    useEffect(() => {
+    const init = async () => {
+        const generatedCode = await generateValidationCode(
+        auth.currentUser?.uid,
+        promotion_id,
+        business_id,
+        );
+        setCode(generatedCode);
+        setLoadingCode(false);
+    };
+    init();
+    }, []);
+
     // Aquí se tiene que validar que el dueño haya introducido el mismo código que el cliente y aceptado
     function validateCode () {
         
@@ -34,18 +70,19 @@ export default function RedeemView () {
     }
 
     useEffect(() => {
-    const interval = setInterval(async () => {
-        const result = await validateCode();
+    if (!code) return;
 
-        if (result == true) {
-            clearInterval(interval);
-            router.dismissAll();
-            router.replace(`/customer-promotions/completed?promotion-id=${promotion_id}`);
+    const interval = setInterval(async () => {
+        const codeSnap = await getDoc(doc(db, 'validationCodes', code));
+        if (codeSnap.exists() && codeSnap.data().used === true) {
+        clearInterval(interval);
+        router.dismissAll();
+        router.replace(`/customer-promotions/completed?promotion-id=${promotion_id}`);
         }
-    }, 3000); // comprobar cada tres segundos
+    }, 3000);
 
     return () => clearInterval(interval);
-    }, []);
+    }, [code]);
 
     return (
 
@@ -58,7 +95,7 @@ export default function RedeemView () {
                 
                 <View style = {{...globalStyles.card, alignItems: 'center', marginTop: 40}}>
                     <Text style = {{color: colors.regularText, fontSize: 16}}>Código</Text>
-                    <Text style = {{color: colors.regularText, fontSize: 42, fontWeight: '500', marginTop: 20}}>{promotion_info.generated_code}</Text>
+                    <Text style = {{color: colors.regularText, fontSize: 42, fontWeight: '500', marginTop: 20}}>{loadingCode ? '...' : code}</Text>
                     { validatePromotion() ?
                         <Text style = {{color: colors.promotion, fontSize: 14, marginTop: 20, textAlign: 'center', fontWeight: 'bold'}}>Al conseguir esta ficha se hará válida la promoción</Text>
                         : ''
