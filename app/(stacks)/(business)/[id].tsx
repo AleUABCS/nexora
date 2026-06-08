@@ -288,7 +288,7 @@ export default function BusinessView() {
                   }}
                   onPress={() =>
                     router.push({
-                      pathname: "/(stacks)/(business)/(reviews)/reviews",
+                      pathname: "/(stacks)/(business)/(reviews-business)/reviews",
                       params: { business_id: business_data.info.business_id },
                     })
                   }
@@ -299,9 +299,10 @@ export default function BusinessView() {
               </View>
               <Text
                 onPress={() =>
-                  router.push(
-                    `/(reviews)/new?id=${business_data.info.business_id}`,
-                  )
+                  router.push({
+                    pathname: "/(stacks)/(business)/(reviews-business)/new",
+                    params: { id: business_data.info.business_id },
+                  })
                 }
                 style={{
                   fontSize: 14,

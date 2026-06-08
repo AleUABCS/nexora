@@ -16,7 +16,7 @@ export default function ReviewsLayout () {
         options={{ headerShown: false }} 
       />
       <Stack.Screen 
-        name="(reviews)" 
+        name="(reviews-business)" 
         options={{ headerShown: false }} 
       />
     </Stack>

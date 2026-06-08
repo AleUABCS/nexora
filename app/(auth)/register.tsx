@@ -1,22 +1,21 @@
-import React, { useState } from 'react';
-import { collection, addDoc } from "firebase/firestore"; 
-import { getFirestore } from "firebase/firestore";
-import appFirebase from '../../credenciales.js'
-import {getAuth, createUserWithEmailAndPassword} from 'firebase/auth'
-const auth = getAuth(appFirebase)
-import { 
-  View, 
-  Text, 
-  TextInput, 
-  TouchableOpacity, 
-  StyleSheet, 
-  KeyboardAvoidingView, 
-  Platform,
-  TouchableWithoutFeedback,
-  Keyboard,
-  Alert
-} from 'react-native';
 import { useRouter } from 'expo-router';
+import { createUserWithEmailAndPassword, getAuth } from 'firebase/auth';
+import { addDoc, collection, getFirestore } from "firebase/firestore";
+import React, { useState } from 'react';
+import {
+  Alert,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View
+} from 'react-native';
+import appFirebase from '../../credenciales.js';
+const auth = getAuth(appFirebase)
 
 export default function registerScreen(){
     const [name, setName] = useState('');
@@ -33,6 +32,10 @@ export default function registerScreen(){
             Alert.alert('Aviso', 'Por favor llena todos los campos');
             return;
         }
+        if (password.length < 8) {
+          Alert.alert('Contraseña inválida', 'La contraseña debe tener al menos 8 caracteres')
+          return;
+        }
         if(password !== passwordConfirm){
             Alert.alert('Aviso', 'Las contraseñas no coinciden');
             return;
@@ -41,7 +44,7 @@ export default function registerScreen(){
             Alert.alert('Aviso', 'El numero no es valido');
             return;
         }
-        console.log("¿Email válido?: ", emailRegex.test(email));
+        console.log("Correo válido?: ", emailRegex.test(email));
         if(!emailRegex.test(email)){
             Alert.alert('Aviso', 'El email no es valido');
             return;

@@ -1,22 +1,17 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useState, useEffect } from "react";
 import { getAuth } from "firebase/auth";
 import {
+  doc,
+  getDoc,
+  getFirestore,
   addDoc,
   collection,
-  doc,
-  getCountFromServer,
-  getDoc,
-  getDocs,
-  getFirestore,
-  query,
-  updateDoc,
-  where
 } from "firebase/firestore";
-import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
+  ActivityIndicator,
   Keyboard,
   Pressable,
   ScrollView,
@@ -98,36 +93,6 @@ export default function NewReview({ onChange }: StarRatingProps) {
       };
 
       await addDoc(collection(db, "reviews"), newReview);
-
-      try {
-          const q = query(
-            collection(db, "reviews"),
-            where("business_id", "==", id),
-          );
-  
-          const countSnapshot = await getCountFromServer(q);
-          const total = countSnapshot.data().count;
-  
-          if (total > 0) {
-            const querySnapshot = await getDocs(q);
-            let sumaCalificaciones = 0;
-  
-            querySnapshot.forEach((doc) => {
-              sumaCalificaciones += doc.data().rating;
-            });
-  
-            const promedio = sumaCalificaciones / total;
-
-            const docRef = doc(db, "negocios", id as string);
-                  await updateDoc(docRef, {
-                    ratingPromedio:promedio
-                  });
-          } else {
-          }
-        } catch (error) {
-          console.error("Error calculando el promedio:", error);
-        }
-
 
       Alert.alert("Éxito", "Review añadida");
       router.back();

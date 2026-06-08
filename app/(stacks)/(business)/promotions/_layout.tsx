@@ -8,7 +8,7 @@ export default function PromotionsLayout () {
         options={{ headerShown: false }} 
       />
       <Stack.Screen 
-        name="[promotion-id]" 
+        name="promotion" 
         options={{ headerShown: false }} 
       />
       <Stack.Screen 
