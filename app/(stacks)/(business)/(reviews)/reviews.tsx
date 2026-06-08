@@ -1,12 +1,9 @@
 import { colors, globalStyles } from "@/constants/globalStyles";
 import { Ionicons } from "@expo/vector-icons";
-import { useLocalSearchParams } from "expo-router/build/hooks";
 import { FlatList, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function BusinessReviewView() {
-
-  const {business_id} = useLocalSearchParams()
 
   const business_name = "Nombre del negocio";
 

@@ -33,7 +33,6 @@ import appFirebase from "../../../credenciales.js";
 const db = getFirestore(appFirebase);
 
 const width = Dimensions.get("window").width;
-const height = Dimensions.get("window").height;
 
 const container_width = width;
 const space = 10;
@@ -70,16 +69,11 @@ export default function BusinessView() {
   }, [id]);
 
   const sendWhatsApp = () => {
-    const limpiaNumero = negocio.telefonoNegocio.replace(/[^0-6]/g, "");
+    const limpiaNumero = negocio.telefonoNegocio.replace(/[^0-9]/g, "");
 
-    const codigoPais = "52";
-    const phoneNumber = limpiaNumero.startsWith(codigoPais)
-      ? limpiaNumero
-      : `${codigoPais}${limpiaNumero}`;
-
+    const phoneNumber = limpiaNumero;
     const message = "¡Hola! Me comunico desde la app Nexora.";
     const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
-
     Linking.canOpenURL(url)
       .then((supported) => {
         if (supported) {
@@ -108,14 +102,14 @@ export default function BusinessView() {
 
         if (total > 0) {
           const querySnapshot = await getDocs(q);
-          let sumaCalificaciones = 0;
+          let sumaReviews = 0;
 
           querySnapshot.forEach((doc) => {
-            sumaCalificaciones += doc.data().rating;
+            sumaReviews += doc.data().rating;
           });
 
-          const promedio = sumaCalificaciones / total;
-          setPromedioRating(Number(promedio.toFixed(1)));
+          const promedio = sumaReviews / total;
+          setPromedioRating(Number(promedio.toFixed(2)));
         } else {
           setPromedioRating(0);
         }
@@ -245,9 +239,7 @@ export default function BusinessView() {
               </View>
               <Text
                 onPress={() =>
-                  router.push(
-                    `/(reviews)/new?id=${business_data.info.business_id}`,
-                  )
+                  router.push(`/(reviews)/new?id=${business_data.info.business_id}`)
                 }
                 style={{
                   fontSize: 14,
