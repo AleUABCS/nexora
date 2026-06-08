@@ -30,6 +30,8 @@ import { Text } from "../../../components/Themed";
 import { colors, globalStyles } from "../../../constants/globalStyles";
 import appFirebase from "../../../credenciales.js";
 
+const auth = getAuth(appFirebase);
+
 const db = getFirestore(appFirebase);
 
 const width = Dimensions.get("window").width;
@@ -225,13 +227,18 @@ export default function BusinessView() {
                   {" "}
                   {business_data.info.rate} estrellas
                 </Text>
-                <Text style={{ color: colors.placeHolder, paddingLeft: 5, textDecorationLine: 'underline' }}
-                  onPress={() => router.push(
-                    {
-                      pathname: '/(stacks)/(business)/(reviews)/reviews',
-                      params: {business_id: business_data.info.business_id}
-                    }
-                  )}
+                <Text
+                  style={{
+                    color: colors.placeHolder,
+                    paddingLeft: 5,
+                    textDecorationLine: "underline",
+                  }}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/(stacks)/(business)/(reviews)/reviews",
+                      params: { business_id: business_data.info.business_id },
+                    })
+                  }
                 >
                   {" "}
                   {business_data.info.reviews} reseñas{" "}
@@ -239,7 +246,9 @@ export default function BusinessView() {
               </View>
               <Text
                 onPress={() =>
-                  router.push(`/(reviews)/new?id=${business_data.info.business_id}`)
+                  router.push(
+                    `/(reviews)/new?id=${business_data.info.business_id}`,
+                  )
                 }
                 style={{
                   fontSize: 14,
@@ -355,37 +364,61 @@ export default function BusinessView() {
               >
                 Horario
               </Text>
-              {Object.entries(business_data.shedule).map(([day, block]) => (
-                <View key={day} style={{ marginBottom: 8 }}>
-                  <View style={{ flexDirection: "row", width: "100%" }}>
-                    <Text
-                      style={{
-                        fontWeight: "bold",
-                        color: "#000",
-                        fontSize: 14,
-                      }}
-                    >
-                      {day === "lunes" && "Lunes"}
-                      {day === "martes" && "Martes"}
-                      {day === "miercoles" && "Miércoles"}
-                      {day === "jueves" && "Jueves"}
-                      {day === "viernes" && "Viernes"}
-                      {day === "sabado" && "Sábado"}
-                      {day === "domingo" && "Domingo"}
-                    </Text>
-                    <View style={{ flex: 1, alignItems: "flex-end" }}>
-                      {block.map((turn, index) => (
+              {negocio.horario ? (
+                Object.entries(negocio.horario).map(
+                  ([day, slots]: [string, any]) => (
+                    <View key={day} style={{ marginBottom: 8 }}>
+                      <View style={{ flexDirection: "row", width: "100%" }}>
                         <Text
-                          style={{ color: colors.regularText, fontSize: 12 }}
-                          key={index}
+                          style={{
+                            fontWeight: "bold",
+                            color: "#000",
+                            fontSize: 14,
+                          }}
                         >
-                          {turn.open} - {turn.close}
+                          {day === "lunes" && "Lunes"}
+                          {day === "martes" && "Martes"}
+                          {day === "miercoles" && "Miércoles"}
+                          {day === "jueves" && "Jueves"}
+                          {day === "viernes" && "Viernes"}
+                          {day === "sabado" && "Sábado"}
+                          {day === "domingo" && "Domingo"}
                         </Text>
-                      ))}
+                        <View style={{ flex: 1, alignItems: "flex-end" }}>
+                          {slots.length === 0 ? (
+                            <Text
+                              style={{
+                                color: colors.placeHolder,
+                                fontSize: 12,
+                              }}
+                            >
+                              Cerrado
+                            </Text>
+                          ) : (
+                            slots.map((slot: any, index: number) => (
+                              <Text
+                                style={{
+                                  color: colors.regularText,
+                                  fontSize: 12,
+                                }}
+                                key={index}
+                              >
+                                {slot.opening} - {slot.closing}
+                              </Text>
+                            ))
+                          )}
+                        </View>
+                      </View>
                     </View>
-                  </View>
-                </View>
-              ))}
+                  ),
+                )
+              ) : (
+                <Text
+                  style={{ color: colors.placeHolder, textAlign: "center" }}
+                >
+                  Sin horario registrado
+                </Text>
+              )}
             </View>
 
             {/* Contacto */}

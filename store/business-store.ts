@@ -2,12 +2,25 @@ import * as ImagePicker from 'expo-image-picker';
 import { Alert } from 'react-native';
 import { create } from 'zustand';
 
+type DayKey = 'lunes' | 'martes' | 'miercoles' | 'jueves' | 'viernes' | 'sabado' | 'domingo';
+type TimeSlot = { id: number; opening: string; closing: string };
+export type Schedule = { [key in DayKey]: TimeSlot[] };
+
+export const emptySchedule: Schedule = {
+  lunes: [], martes: [], miercoles: [], jueves: [],
+  viernes: [], sabado: [], domingo: [],
+};
+
 interface BusinessStore {
   images: string[];
   setImages: (images: string[]) => void;
   addImage: (url: string) => void;
   removeImage: (url: string) => void;
   clearImages: () => void;
+
+  schedule: Schedule;
+  setSchedule: (schedule: Schedule) => void;
+  clearSchedule: () => void;
 }
 
 export const useBusinessStore = create<BusinessStore>((set) => ({
@@ -16,10 +29,14 @@ export const useBusinessStore = create<BusinessStore>((set) => ({
   addImage: (url) => set((state) => ({ images: [...state.images, url] })),
   removeImage: (url) => set((state) => ({ images: state.images.filter((img) => img !== url) })),
   clearImages: () => set({ images: [] }),
+
+  schedule: emptySchedule,
+  setSchedule: (schedule) => set({ schedule }),
+  clearSchedule: () => set({ schedule: emptySchedule }),
 }));
 
 export async function pickImages() {
-  const { addImage } = useBusinessStore.getState()
+  const { addImage } = useBusinessStore.getState();
 
   const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
@@ -38,6 +55,3 @@ export async function pickImages() {
     result.assets.forEach((asset) => addImage(asset.uri));
   }
 }
-
-// Falta función para subir las fotos, en el botón "Fotos" en la pantalla de crear negocio
-// y en el botó "Guardar cambios" en la pantalla de fotos
