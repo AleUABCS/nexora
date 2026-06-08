@@ -1,27 +1,30 @@
 import { colors, globalStyles } from "@/constants/globalStyles";
+import appFirebase from "@/credenciales";
 import { router, useLocalSearchParams } from "expo-router";
+import { deleteDoc, doc, getFirestore } from "firebase/firestore";
 import { Alert, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+const db = getFirestore(appFirebase);
 const chip_icon = require('../../../../assets/images/chip.png')
 
 export default function PromotionView () {
+
+    const {
+        id,
+        name,
+        description,
+        start_date,
+        end_date,
+        times,
+        business_id,
+    } = useLocalSearchParams()
+
     const promotion_info = {
-        name: 'Nombre de la promoción',
-        description: 'Descripción de la promoción descripción de la promoción descripción de la promoción descripción de la promoción',
-        completed: 2, // Cuantas fichas lleva
-        needed: 3, // Cuantas necesita para conseguir la promoción
+        name: name,
+        description: description,
     }
 
-    const {'promotion-id' : promotion_id} = useLocalSearchParams()
-
-    console.log(promotion_id)
-
-    function deletePromotion () {
-        // Eliminar promoción en el back
-
-        router.back()
-    }
     function alertOnDelete () {
         Alert.alert(
             'Eliminar promoción',
@@ -33,10 +36,16 @@ export default function PromotionView () {
                 },
                 {
                     text: 'Eliminar',
-                    onPress: deletePromotion
+                    onPress: () => {deletePromotion(business_id as string, id as string)}
                 }
             ]
         )
+    }
+    
+    const deletePromotion = async (business_id: string, id: string) => {
+        console.log('negocio aidi: '+business_id+' promocion aidi: '+id+' han sido bananeados')
+        await deleteDoc(doc(db, 'negocios', business_id, 'promociones', id))
+        router.back()
     }
     
     return (
@@ -47,9 +56,13 @@ export default function PromotionView () {
                 <View style = {{...globalStyles.card, marginTop: 40}}>
                     <Text style = {{fontSize: 16}}>Descripción</Text>
                     <Text style = {{fontSize: 14, color: colors.regularText, marginTop: 10, overflow: 'scroll', maxHeight: 200}}>{promotion_info.description}</Text>
+                    
+                    <View style = {{justifyContent: 'center', marginTop: 20}}>
+                    <Text>Fecha de inicio: {start_date}</Text>
+                    <Text>Fecha de fin: {end_date}</Text>
+                    <Text>Fichas necesarias: {times}</Text>   
                 </View>
 
-                <View style = {{justifyContent: 'center', flexDirection: 'row'}}>
                 </View>
 
                 <TouchableOpacity 

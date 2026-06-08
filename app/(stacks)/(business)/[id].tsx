@@ -1,6 +1,7 @@
 import { useFavoritesStore } from "@/store/saved-store";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
+import { getAuth } from "firebase/auth";
 import {
   collection,
   doc,
@@ -8,7 +9,9 @@ import {
   getDoc,
   getDocs,
   getFirestore,
+  onSnapshot,
   query,
+  Timestamp,
   where,
 } from "firebase/firestore";
 import * as React from "react";
@@ -30,7 +33,7 @@ import { Text } from "../../../components/Themed";
 import { colors, globalStyles } from "../../../constants/globalStyles";
 import appFirebase from "../../../credenciales.js";
 
-const auth = getAuth(appFirebase);
+const auth = getAuth(appFirebase)
 
 const db = getFirestore(appFirebase);
 
@@ -123,6 +126,52 @@ export default function BusinessView() {
     if (id) calcularPromedioYTotal();
   }, [id]);
 
+    const useCustomerPromotions = (business_id: string, user_id: string) => {
+    const [promotions, setPromotions] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+      const now = new Date();
+
+      const ref = collection(db, 'negocios', business_id, 'promociones');
+      const q = query(
+        ref,
+        where('endDate', '>=', Timestamp.fromDate(now))
+      );
+
+      const unsub = onSnapshot(q, async (snapshot) => {
+        const data = await Promise.all(
+          snapshot.docs.map(async (docSnap) => {
+            const d = docSnap.data();
+
+            const userPromoRef = doc(db, 'userPromotions', `${user_id}_${docSnap.id}`);
+            const userPromoSnap = await getDoc(userPromoRef);
+            const tokensEarned = userPromoSnap.exists()
+              ? userPromoSnap.data().tokensEarned
+              : 0;
+
+            return {
+              id: docSnap.id,
+              ...d,
+              startDate: d.startDate?.toDate().toLocaleDateString('es-MX'),
+              endDate: d.endDate?.toDate().toLocaleDateString('es-MX'),
+              tokensEarned,
+            };
+          })
+        );
+
+        setPromotions(data);
+        setLoading(false);
+      });
+
+      return () => unsub();
+    }, [business_id, user_id]);
+
+    return { promotions, loading };
+  };
+
+  const {promotions, loading} = useCustomerPromotions(id as string, auth.currentUser?.uid as string)
+
   if (cargando)
     return <ActivityIndicator size="large" style={{ marginTop: 50 }} />;
   if (!negocio) return <Text>Negocio no encontrado</Text>;
@@ -166,6 +215,8 @@ export default function BusinessView() {
     },
   };
 
+
+  
   return (
     <SafeAreaView style={globalStyles.mainContainer}>
       <ScrollView>
@@ -308,12 +359,16 @@ export default function BusinessView() {
           <View style={{ marginTop: 20, marginHorizontal: 5 }}>
             <Text style={styles.text}>Promociones activas </Text>
             <View style={{ marginTop: 15 }}>
-              {business_data.promotions.map((promo, index) => (
+              {promotions.map((promo, index) => (
                 <TouchableOpacity
                   key={index}
-                  onPress={() =>
-                    router.push(`/customer-promotions/${promo.id}`)
-                  }
+                  onPress={() => {
+                    router.push({
+                      pathname: `/customer-promotions/${promo.id}`,
+                      params: {id: promo.id, name: promo.name, description: promo.description, times: promo.totalTokens, start_date: promo.startDate, end_date: promo.endDate, tokens_earned: promo.tokensEarned, business_id: business_data.info.business_id}
+                    })
+                    console.log ('id del negocio: ' + business_data.info.business_id)
+                  }}
                   style={styles.promotion}
                 >
                   <Text
@@ -325,7 +380,7 @@ export default function BusinessView() {
                     numberOfLines={1}
                     ellipsizeMode="tail"
                   >
-                    {business_data.promotions[index].promotion_name}
+                    {promotions[index].name}
                   </Text>
                 </TouchableOpacity>
               ))}
