@@ -119,7 +119,7 @@ export default function PromotionsView() {
 
                                     <View style={{ flexDirection: 'row' }}>
                                         <Image source={chip_icon} style={{ width: 26, height: 26 }} />
-                                        <Text style={{ alignSelf: 'center', textAlign: 'right' }}>{item.tokensEarned}/{item.totalTokens}</Text>
+                                        {/* <Text style={{ alignSelf: 'center', textAlign: 'right' }}>{item.tokensEarned}/{item.totalTokens}</Text> */}
                                     </View>
                                 </TouchableOpacity>
                             </View>
