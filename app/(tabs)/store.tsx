@@ -6,13 +6,13 @@ import {
   query,
   where,
 } from "firebase/firestore";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import appFirebase from "../../credenciales.js";
 const auth = getAuth(appFirebase);
 const db = getFirestore(appFirebase);
 
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { Href, useRouter } from "expo-router";
+import { Href, useFocusEffect, useRouter } from "expo-router";
 import {
   Pressable,
   ScrollView,
@@ -26,38 +26,40 @@ export default function BusinessScreen() {
   const router = useRouter();
   const [negocios, setNegocios] = useState<any[]>([]);
 
-  useEffect(() => {
-    const obtenerNegocios = async () => {
-      const usuarioActual = auth.currentUser;
+  useFocusEffect(
+    useCallback(() => {
+      const obtenerNegocios = async () => {
+        const usuarioActual = auth.currentUser;
 
-      if (!usuarioActual) {
-        console.log("No hay usuario autenticado");
-        return;
-      }
+        if (!usuarioActual) {
+          console.log("No hay usuario autenticado");
+          return;
+        }
 
-      try {
-        const userId = usuarioActual.uid;
+        try {
+          const userId = usuarioActual.uid;
 
-        const consultaFiltrada = query(
-          collection(db, "negocios"),
-          where("userId", "==", userId),
-        );
+          const consultaFiltrada = query(
+            collection(db, "negocios"),
+            where("userId", "==", userId),
+          );
 
-        const querySnapshot = await getDocs(consultaFiltrada);
+          const querySnapshot = await getDocs(consultaFiltrada);
 
-        const lista = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+          const lista = querySnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
 
-        setNegocios(lista);
-      } catch (error) {
-        console.error("Error al obtener los datos: ", error);
-      }
-    };
+          setNegocios(lista);
+        } catch (error) {
+          console.error("Error al obtener los datos: ", error);
+        }
+      };
 
-    obtenerNegocios();
-  }, []);
+      obtenerNegocios();
+    }, [])
+  );
 
   return (
     <View style={styles.mainContainer}>
@@ -73,23 +75,27 @@ export default function BusinessScreen() {
               <Text style={styles.businessName}>{negocio.nombreNegocio}</Text>
 
               <View style={styles.actionsContainer}>
-                <TouchableOpacity style={styles.actionButton} onPress={ () => router.push(`../(stacks)/(dashboard)/${negocio.id}` as Href)}>
+                <TouchableOpacity
+                  style={styles.actionButton}
+                  onPress={() => router.push(`../(stacks)/(dashboard)/${negocio.id}` as Href)}
+                >
                   <Ionicons name="trending-up" size={18} color="#FFFFFF" />
                 </TouchableOpacity>
 
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.actionButton}
-                    onPress={() => router.push(`../(stacks)/(business)/${negocio.id}`)}
-                    >
+                  onPress={() => router.push(`../(stacks)/(business)/${negocio.id}` as Href)}
+                >
                   <Ionicons name="eye" size={18} color="#FFFFFF" />
                 </TouchableOpacity>
 
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.actionButton}
-                    onPress={() => router.push({
+                  onPress={() => router.push({
                     pathname: '/(stacks)/(business)/edit-business',
-                    params: {id: negocio.id}
-                  })}                  >
+                    params: { id: negocio.id }
+                  })}
+                >
                   <Ionicons name="pencil" size={16} color="#FFFFFF" />
                 </TouchableOpacity>
 
@@ -105,16 +111,6 @@ export default function BusinessScreen() {
                   >
                   <Ionicons name="pricetag" size={16} color="#FFFFFF" />
                 </TouchableOpacity>
-
-                {/* <TouchableOpacity 
-                  style={styles.actionButton}
-                  onPress={() => router.push({
-                    pathname: '../(stacks)/(business)/appointments/schedule',
-                    params: {id: negocio.id}
-                  })}
-                >
-                  <Ionicons name="calendar" size={18} color="#FFFFFF" />
-                </TouchableOpacity> */}
               </View>
 
               {index < negocios.length - 1 && <View style={styles.divider} />}

@@ -118,11 +118,13 @@ export default function RegisterBusinessScreen() {
 
       const newBusiness = {
         nombreNegocio: nameBusiness,
+        nombreBusqueda: nameBusiness.toLowerCase(),
         userId: usuarioActual.uid,
         descripcion: description,
         categoriaNegocio: selectedValue!.value,
         telefonoNegocio: phone,
         emailNegocio: email,
+        ratingPromedio:0,
         imagenes: imageUrls,
         createdAt: new Date().toISOString(),
       };

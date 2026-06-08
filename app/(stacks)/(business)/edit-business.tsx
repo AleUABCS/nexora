@@ -2,14 +2,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { getAuth } from "firebase/auth";
 import {
-  getFirestore,
-  doc,
   deleteDoc,
+  doc,
   getDoc,
+  getFirestore,
   updateDoc,
 } from "firebase/firestore";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-const storage = getStorage(appFirebase);
+import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -32,6 +31,7 @@ import Select, { ISelectItem } from "rn-custom-select-dropdown";
 import { colors } from "../../../constants/globalStyles";
 import appFirebase from "../../../credenciales.js";
 import { pickImages, useBusinessStore } from "../../../store/business-store";
+const storage = getStorage(appFirebase);
 
 const auth = getAuth(appFirebase);
 const db = getFirestore(appFirebase);
@@ -184,7 +184,7 @@ export default function EditBusinessScreen() {
     );
   };
 
-  const { addImage, images, setImages, clearImages } = useBusinessStore();
+  const {images, setImages, clearImages } = useBusinessStore();
 
   const askForImages = () => {
     if (images.length > 0) {

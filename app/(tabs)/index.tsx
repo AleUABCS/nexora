@@ -9,10 +9,12 @@ import {
   collection,
   getDocs,
   getFirestore,
+  query,
   serverTimestamp,
+  where,
 } from "firebase/firestore";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 
 import {
   FlatList,
@@ -25,7 +27,7 @@ import {
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { Image } from "react-native";
 import { colors } from "../../constants/globalStyles";
 import appFirebase from "../../credenciales.js";
@@ -65,34 +67,45 @@ const CATEGORIES = [
 ];
 
 export default function HomeScreen() {
+  const [busqueda, setBusqueda] = useState("");
   const [negocios, setNegocios] = useState<any[]>([]);
-  const estrellas = 4.4
-  const imagen_negocio = require('../../assets/images/cuyo2.jpg')
 
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<
     string | null
   >(null);
 
-  useEffect(() => {
-    const obtenerNegocios = async () => {
-      try {
-        const querySnapshot = await getDocs(collection(db, "negocios"));
+  useFocusEffect(
+    useCallback(() => {
+      const obtenerDatos = async () => {
+        try {
+          let consulta;
 
-        const lista = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
+          // Evaluamos si la barra de búsqueda está vacía
+          if (busqueda.trim() === "") {
+            consulta = collection(db, "negocios");
+          } else {
+            consulta = query(
+              collection(db, "negocios"),
+              where("nombreBusqueda", ">=", busqueda.toLowerCase().trim()),
+              where("nombreBusqueda", "<=", busqueda.trim().toLowerCase() + "\uf8ff")
+            );
+          }
 
-          ...doc.data(),
-        }));
+          const querySnapshot = await getDocs(consulta);
+          const listaProcesada = querySnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
 
-        setNegocios(lista);
-      } catch (error) {
-        console.error("Error al obtener los datos: ", error);
-      }
-    };
+          setNegocios(listaProcesada);
+        } catch (error) {
+          console.error("Error al obtener los datos: ", error);
+        }
+      };
 
-    obtenerNegocios();
-  }, []);
-
+      obtenerDatos();
+    }, [busqueda])
+  );
   const manejarSeleccionCategoria = (nombreCategoria: string) => {
     if (categoriaSeleccionada === nombreCategoria) {
       setCategoriaSeleccionada(null);
@@ -173,6 +186,8 @@ export default function HomeScreen() {
     }
   };
 
+  
+
   const renderBusiness = ({ item }: { item: any }) => {
     return (
       <TouchableOpacity
@@ -181,53 +196,54 @@ export default function HomeScreen() {
           router.push(`/(stacks)/(business)/${item.id}`);
         }}
       >
-        <View style={{...styles.businessCard, flexDirection: 'row', height: 170}}>
-
-          <View style = {{marginRight: 20}}>
+        <View
+          style={{ ...styles.businessCard, flexDirection: "row", height: 170 }}
+        >
+          <View style={{ marginRight: 20 }}>
             <Image
-            source={imagen_negocio}
-            style = {{
-              width: 130,
-              height: 130,
-              borderRadius: 12,
-            }}
+              source={{ uri: item.imagenes?.[0] || "https://via.placeholder.com/130" }}
+              style={{
+                width: 130,
+                height: 130,
+                borderRadius: 12,
+              }}
             />
           </View>
 
-          <View style = {{marginRight:10}}>
-
-            <Text 
-              style={{...styles.businessName, width: 200}}
+          <View style={{ marginRight: 10 }}>
+            <Text
+              style={{ ...styles.businessName, width: 200 }}
               numberOfLines={1}
-            >{item.nombreNegocio}</Text>
-
-            <Text style={styles.businessDetail}>
-              {item.categoriaNegocio || "Sin categoría"}
-            </Text>
-
-            <Text 
-              style = {{...styles.businessDetail, width: '40%'}}
-              numberOfLines={2}
-              ellipsizeMode='tail'
-              >
-              {item.descripcion}
+            >
+              {item.nombreNegocio}
             </Text>
 
             <View style={{ flexDirection: "row", marginBottom: 10 }}>
               {Array.from({ length: 5 }, (_, i) => (
                 <Ionicons
                   key={i}
-                  name={i < Math.round(estrellas) ? "star" : "star-outline"}
+                  name={i < Math.round(item.ratingPromedio || 0) ? "star" : "star-outline"}
                   size={16}
                   color={colors.mainBlue}
-                  style = {{marginTop: 4}}
+                  style={{ marginTop: 4 }}
                 />
               ))}
-              </View>  
+            </View>
 
-          </View>    
+            <Text style={styles.businessDetail}>
+              {item.categoriaNegocio || "Sin categoría"}
+            </Text>
 
-    </View>
+            <Text
+              style={{ ...styles.businessDetail, width: "43%" }}
+              numberOfLines={2}
+              ellipsizeMode="tail"
+            >
+              {item.descripcion}
+            </Text>
+
+          </View>
+        </View>
       </TouchableOpacity>
     );
   };
@@ -240,6 +256,7 @@ export default function HomeScreen() {
             style={styles.searchInput}
             placeholder="Buscar..."
             placeholderTextColor="#A0A0A0"
+            onChangeText={setBusqueda}
           />
 
           <Ionicons
