@@ -1,222 +1,224 @@
+import { colors, globalStyles } from "@/constants/globalStyles";
 import { Ionicons } from "@expo/vector-icons";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useState, useEffect } from "react";
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { router, useLocalSearchParams } from "expo-router";
 import { getAuth } from "firebase/auth";
-import {
-  doc,
-  getDoc,
-  getFirestore,
-  addDoc,
-  collection,
-} from "firebase/firestore";
-import {
-  Alert,
-  ActivityIndicator,
-  Keyboard,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-  View,
-} from "react-native";
+import { addDoc, collection, getFirestore, serverTimestamp, Timestamp } from "firebase/firestore";
+import { useState } from "react";
+import { Alert, Image, Keyboard, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { colors, globalStyles } from "../../../../constants/globalStyles";
 import appFirebase from "../../../../credenciales.js";
+
 const db = getFirestore(appFirebase);
+const auth = getAuth(appFirebase)
 
-interface StarRatingProps {
-  onChange?: (rating: number) => void;
-}
+const chip_icon = require('../../../../assets/images/chip.png')
 
-export default function NewReview({ onChange }: StarRatingProps) {
-  const router = useRouter();
-  const auth = getAuth(appFirebase);
-  const { id } = useLocalSearchParams();
-  const [negocio, setNegocio] = useState<any>(null);
-  const [cargando, setCargando] = useState(true);
+export default function NewPromotionView () {
+    const {business_id} = useLocalSearchParams()
+    const [name, setName] = useState('')
+    const [description, setDescription] = useState('')
+    const [times, setTimes] = useState(1)
 
-  const [rating, setRating] = useState(0);
-  const [review_description, setDescription] = useState("");
+    const [startDate, setStartDate] = useState(new Date());
+    const [endDate, setEndDate] = useState(new Date());
+    const [showStart, setShowStart] = useState(Platform.OS === 'ios');
+    const [showEnd, setShowEnd] = useState(Platform.OS === 'ios');
 
-  useEffect(() => {
-    const obtenerNegocio = async () => {
-      try {
-        const docRef = doc(db, "negocios", id as string);
-        const docSnap = await getDoc(docRef);
+    const createPromotion = async (business_id: any, data: any) => {
+        // Guardar promoción en el back
+        const {name, description, startDate, endDate, times } = data
+        const ref = collection(db, 'negocios', business_id, 'promociones')
 
-        if (docSnap.exists()) {
-          setNegocio(docSnap.data());
+        if (name == '' && description == '') {
+            Alert.alert('Campos vacíos', 'Tienes que llenar todos los campos')
         } else {
-          console.log("No existe el negocio");
+
+            
+            await addDoc(ref, {
+                name,
+                description,
+                startDate : Timestamp.fromDate(new Date(startDate)),
+                endDate : Timestamp.fromDate(new Date(endDate)),
+                totalTokens: Number(times),
+                isActive: true,
+                createdBy: auth.currentUser?.uid,
+                createdAt: serverTimestamp()
+            })
+            
+            // console.log(name, description, startDate, endDate, times)
+            router.back()
         }
-      } catch (error) {
-        console.error("Error consultando Firebase:", error);
-      } finally {
-        setCargando(false);
-      }
-    };
-
-    if (id) obtenerNegocio();
-  }, [id]);
-
-  if (cargando)
-    return <ActivityIndicator size="large" style={{ marginTop: 50 }} />;
-  if (!negocio) return <Text>Negocio no encontrado</Text>;
-
-  let review_data = {
-    business_id: id,
-    name_business: negocio.nombreNegocio,
-    rate: rating, // Calificación
-    description: review_description, // Descripción
-  };
-  const hanldeReviewUpload = async () => {
-    const usuarioActual = auth.currentUser;
-    if (!usuarioActual) {
-      Alert.alert("Aviso", "Usuario no logueado");
-      return;
-    }
-    if (review_description === "") {
-      Alert.alert("Aviso", "Por favor llena todos los campos");
-      return;
-    }
-    try {
-      const newReview = {
-        userId: usuarioActual.uid,
-        business_id: id,
-        review: review_description,
-        rating: rating,
-
-        createdAt: new Date().toISOString(),
-      };
-
-      await addDoc(collection(db, "reviews"), newReview);
-
-      Alert.alert("Éxito", "Review añadida");
-      router.back();
-    } catch (error) {
-      console.log(error);
-      Alert.alert("Error", "No se pudo añadir la review");
     }
 
-    router.back();
-  };
-  return (
-    // Contenedor padre
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <SafeAreaView style={globalStyles.mainContainer}>
-        <View style={[globalStyles.secondContainer]}>
-          <View style={{ alignItems: "center" }}>
-            <Ionicons
-              name="star-outline"
-              color={colors.mainBlue}
-              size={63}
-              style={{ marginTop: 40 }}
-            />
-            <Text
-              style={{ fontSize: 32, color: colors.regularText, marginTop: 40 }}
-            >
-              {review_data.name_business}
-            </Text>
-          </View>
-          {/* Contenedor con estilo de tarjeta */}
-          <View style={{ ...globalStyles.card, marginTop: 25, paddingTop: 40 }}>
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <Text style={styles.boldText}>Calificación</Text>
+    return (
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <SafeAreaView style={globalStyles.mainContainer}>
+                <ScrollView>
+                    <View style={globalStyles.secondContainer}>
 
-              <View style={{ flexDirection: "row", gap: 8 }}>
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Pressable
-                    key={star}
-                    onPress={() => {
-                      setRating(star);
-                      onChange?.(star);
-                    }}
-                  >
-                    <Ionicons
-                      name={star <= rating ? "star" : "star-outline"}
-                      size={24}
-                      color={colors.mainBlue}
-                    />
-                  </Pressable>
-                ))}
-              </View>
-            </View>
+                        <Image source={chip_icon} style={{ width: 65, height: 65, marginTop: 30, alignSelf: 'center' }} />
+                        <Text style={{ ...globalStyles.titleText, marginTop: 30, fontSize: 24, color: colors.regularText }}>Publicar una promoción</Text>
 
-            <View style={{ marginTop: 30 }}>
-              <Text style={styles.boldText}>Reseña</Text>
-              <ScrollView style={{ maxHeight: 200 }}>
-                <TextInput
-                  textAlignVertical="top"
-                  multiline
-                  style={{ ...styles.textArea, height: 150, marginTop: 20 }}
-                  placeholder="Escribe tu reseña"
-                  placeholderTextColor="#A0A0A0"
-                  value={review_description}
-                  onChangeText={setDescription}
-                />
-              </ScrollView>
-            </View>
+                        <View style={{ marginTop: 40 }} />
 
-            <View
-              style={{
-                alignItems: "flex-end",
-                alignSelf: "flex-end",
-                marginTop: 20,
-                width: "60%",
-              }}
-            >
-              {/* Botón "Ver negocio" */}
-              <TouchableOpacity
-                style={{ ...globalStyles.button, width: "100%" }}
-                onPress={hanldeReviewUpload}
-              >
-                <Ionicons
-                  name="arrow-up"
-                  color="#FFFFFF"
-                  size={24}
-                  style={{ paddingRight: 5 }}
-                ></Ionicons>
-                <Text style={globalStyles.buttonText}>Publicar</Text>
-              </TouchableOpacity>
+                        <View>
+                            <Text style={styles.inputLabel}>Nombre</Text>
+                            <TextInput
+                                textAlignVertical="top"
+                                style={{ ...styles.textArea, height: 50, marginTop: 20 }}
+                                placeholder="Nombre de la promoción"
+                                placeholderTextColor="#A0A0A0"
+                                value={name}
+                                onChangeText={setName}
+                            />
+                        </View>
 
-              {/* Botón "Cancelar" */}
-              <TouchableOpacity
-                style={{
-                  ...globalStyles.button,
-                  backgroundColor: colors.mainBlue,
-                  width: "100%",
-                }}
-                onPress={() => router.back()}
-              >
-                <Text style={globalStyles.buttonText}>Cancelar</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </SafeAreaView>
-    </TouchableWithoutFeedback>
-  );
+                        <View style={{ marginTop: 30 }} />
+
+                        <View>
+                            <Text style={styles.inputLabel}>Descripción</Text>
+                            <TextInput
+                                textAlignVertical="top"
+                                multiline
+                                style={{ ...styles.textArea, height: 150, marginTop: 20 }}
+                                placeholder="Escribe la descripción de la promoción"
+                                placeholderTextColor="#A0A0A0"
+                                value={description}
+                                onChangeText={setDescription}
+                            />
+                        </View>
+
+                        <View style={{ marginTop: 30 }} />
+
+                        <View style = {{flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginBottom: 20}}>
+                            <Text 
+                                style = {{...styles.inputLabel, color: colors.mainBlue, textDecorationLine: 'underline'}}
+                                onPress={() => Alert.alert('Fichas', 'La cantidad de fichas necesarias indica cuántas veces el cliente tiene que validar la promoción para completarla y conseguirla')}
+                                >Fichas necesarias </Text>
+                            <TouchableOpacity style = {styles.timesButton}
+                                onPress={() => setTimes(times > 1 ? times - 1 : 1)}
+                                >
+                                <Ionicons name='remove' size={20}></Ionicons>
+                            </TouchableOpacity>
+
+                            <TextInput  
+                                style = {{...styles.textArea, width: 50, textAlign: 'center'}}
+                                value={times.toString()}
+                                editable={false}
+                                
+                            />
+                                
+                            <TouchableOpacity style = {styles.timesButton}
+                                onPress={() => setTimes(times + 1)}
+                            >
+                                <Ionicons name='add-outline' size={20}></Ionicons>
+                            </TouchableOpacity>
+                        </View>
+
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginHorizontal: 20 }}>
+                            {/* Fecha de inicio */}
+                            <View>
+                                <Text style={styles.inputLabel}>Fecha de inicio</Text>
+                                {Platform.OS === 'android' && (
+                                    <TouchableOpacity
+                                        onPress={() => setShowStart(!showStart)}
+                                        style={{ ...globalStyles.button, ...styles.dateButton }}
+                                    >
+                                        <Text style={styles.dateButtonText}>{startDate.toLocaleDateString()}</Text>
+                                    </TouchableOpacity>
+                                )}
+                                {showStart && (
+                                    <DateTimePicker
+                                        value={startDate}
+                                        mode="date"
+                                        themeVariant="light"
+                                        onChange={(event, selectedDate) => {
+                                            if (Platform.OS === 'android') setShowStart(false);
+                                            if (selectedDate) setStartDate(selectedDate);
+                                        }}
+                                    />
+                                )}
+                            </View>
+                            <View style={{ marginTop: 20 }} />
+
+                            {/* Fecha de fin */}
+                            <View>
+                                <Text style={styles.inputLabel}>Fecha de fin</Text>
+                                {Platform.OS === 'android' && (
+                                    <TouchableOpacity
+                                        onPress={() => setShowEnd(!showEnd)}
+                                        style={{ ...globalStyles.button, ...styles.dateButton }}
+                                    >
+                                        <Text style={styles.dateButtonText}>{endDate.toLocaleDateString()}</Text>
+                                    </TouchableOpacity>
+                                )}
+                                {showEnd && (
+                                    <DateTimePicker
+                                        value={endDate}
+                                        mode="date"
+                                        themeVariant="light"
+                                        onChange={(event, selectedDate) => {
+                                            if (Platform.OS === 'android') setShowEnd(false);
+                                            if (selectedDate) setEndDate(selectedDate);
+                                        }}
+                                    />
+                                )}
+                            </View>
+                        </View>
+
+                        <TouchableOpacity style={{ ...globalStyles.button, marginTop: 30, height: 50, width: '60%', alignSelf: 'flex-end' }}
+                            onPress={() => createPromotion(business_id, {name, description, startDate, endDate, times})}
+                        >
+                            <Text style={{ ...globalStyles.buttonText, fontSize: 14 }}>Publicar promoción</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity style={{ ...globalStyles.button, backgroundColor: colors.warn, height: 50, width: '60%', alignSelf: 'flex-end' }}
+                            onPress={router.back}
+                        >
+                            <Text style={{ ...globalStyles.buttonText, fontSize: 14 }}>Cancelar</Text>
+                        </TouchableOpacity>
+
+                    </View>
+                </ScrollView>
+            </SafeAreaView>
+        </TouchableWithoutFeedback>
+    )
 }
 
 const styles = StyleSheet.create({
-  boldText: {
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  textArea: {
-    ...globalStyles.input,
-    paddingTop: 10,
-    paddingLeft: 10,
-    paddingRight: 10,
-    paddingBottom: 10,
-  },
-});
+    input: {
+        borderRadius: 14,
+        borderWidth: 1,
+        borderColor: colors.placeHolder,
+        fontSize: 16,
+        backgroundColor: colors.warn
+    },
+    inputLabel: {
+        color: '#333',
+        fontSize: 14,
+    },
+    textArea: {
+        ...globalStyles.input,
+        paddingTop: 10,
+        paddingLeft: 10,
+        paddingRight: 10,
+        paddingBottom: 10
+    },
+    dateButton: {
+        backgroundColor: colors.secondaryBlue,
+        marginTop: 10,
+    },
+    dateButtonText: {
+        color: colors.mainBlue
+    },
+    timesButton: {
+        marginHorizontal: 5,
+        backgroundColor: colors.secondaryBlue,
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: 40,
+        height: 40,
+        borderRadius: 12,
+    }
+})

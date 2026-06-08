@@ -8,10 +8,6 @@ export default function ReviewsLayout () {
         options={{ headerShown: false }} 
       />
       <Stack.Screen 
-        name="(reviews)/new" 
-        options={{ headerShown: false }} 
-      />
-      <Stack.Screen 
         name="promotions" 
         options={{ headerShown: false }} 
       />

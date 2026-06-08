@@ -1,18 +1,23 @@
 import { colors, globalStyles } from "@/constants/globalStyles"
+import appFirebase from "@/credenciales"
 import { router, useLocalSearchParams } from "expo-router"
+import { getAuth } from "firebase/auth"
+import { doc, getDoc, getFirestore, runTransaction, serverTimestamp } from "firebase/firestore"
 import { useRef, useState } from "react"
 import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 
+const auth = getAuth(appFirebase)
+
+const db = getFirestore(appFirebase);
+
+
 export default function ValidatePromotionView() {
 
-    const { 'promotion-id': promotion_id } = useLocalSearchParams<{ 'promotion-id': string }>()
+    const { business_id } = useLocalSearchParams()
     const [code, setCode] = useState(['', '', '', ''])
     const [error, setError] = useState(false)
     const inputs = useRef<(TextInput | null)[]>([])
-
-    // Este es el código generado que le sale al cliente y el dueño lo tiene que introducir
-    const generated_code = 1234
 
     function handleInput(value: string, index: number) {
         if (!/^\d?$/.test(value)) return
@@ -33,25 +38,64 @@ export default function ValidatePromotionView() {
         }
     }
 
-    function handleValidate() {
-        const enteredCode = parseInt(code.join(''))
-        if (enteredCode === generated_code) {
-            // sumar 1 a completed, marcar promoción como válida, etc.
+    const validateCode = async (inputCode: string, business_id: string) => {
+        const codeRef = doc(db, 'validationCodes', inputCode)
+        const codeSnap = await getDoc(codeRef)
 
-            Alert.alert(
-                'Código correcto',
-                'El cliente ha obtenido una ficha',
-                [
-                    {
-                        text: 'Aceptar',
-                        onPress: () => router.dismissAll(),
-                    },
-                ]
-            )
-        } else {
-            setError(true)
-            setCode(['', '', '', ''])
-            inputs.current[0]?.focus()
+        if (!codeSnap.exists()) throw new Error('Código inválido')
+
+        const { user_id, promotion_id, used, expiresAt } = codeSnap.data();
+
+        if (used) throw new Error('Este código ya fue usado')
+        if (expiresAt.toDate() < new Date()) throw new Error('Este código ya expiró')
+
+        const promoRef = doc(db, 'negocios', business_id, 'promociones', promotion_id)
+        const promoSnap = await getDoc(promoRef)
+        const { totalTokens } = promoSnap.data()!
+
+        const userPromoRef = doc(db, 'userPromotions', `${user_id}_${promotion_id}`)
+
+        const result = await runTransaction(db, async (tx) => {
+            const userPromoSnap = await tx.get(userPromoRef)
+
+            const currentTokens = userPromoSnap.exists()
+            ? userPromoSnap.data().tokensEarned
+            : 0
+
+            const newTokens = currentTokens + 1
+            const isCompleted = newTokens >= totalTokens
+
+            tx.set(userPromoRef, {
+            user_id,
+            promotion_id,
+            business_id,
+            tokensEarned: newTokens,
+            isCompleted,
+            completedAt: isCompleted ? serverTimestamp() : null,
+            }, { merge: true })
+
+            tx.update(codeRef, { used: true })
+
+            return { newTokens, totalTokens, isCompleted }
+        }); 
+
+    return result
+    };
+
+    async function handleValidate() {
+        // sumar 1 a completed, marcar promoción como válida, etc.
+
+        try {
+            const result = await validateCode(code.join(''), business_id as string);
+            
+            if (result.isCompleted) {
+                Alert.alert('¡Promoción completada!', 'Entrégale la promoción al cliente');
+            } else {
+                Alert.alert('Ficha agregada', `El cliente lleva ${result.newTokens} de ${result.totalTokens} fichas`);
+            }
+            router.back();
+        } catch (error: any) {
+        Alert.alert('Error', error.message);
         }
     }
 
