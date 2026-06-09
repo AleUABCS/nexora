@@ -21,13 +21,12 @@ import {
   Alert,
   Dimensions,
   FlatList,
-  Image,
-  Linking,
-  ScrollView,
+  Image, Linking, ScrollView,
   StyleSheet,
   TouchableOpacity,
-  View,
-} from "react-native";
+  View
+} from 'react-native';
+import MapView, { Marker } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Text } from "../../../components/Themed";
 import { colors, globalStyles } from "../../../constants/globalStyles";
@@ -190,11 +189,10 @@ export default function BusinessView() {
       email: negocio.emailNegocio,
       phone: negocio.telefonoNegocio,
     },
-    coordinates: {
-      // Coordenadas en latitud y longitud
-      latitude: 24.1426,
-      longitude: -110.3128,
-    },
+    coordinates: negocio.location ? {
+      latitude: negocio.location.latitude,
+      longitude: negocio.location.longitude,
+    } : null,
     promotions: [
       // Promociones con id y su nombre
       { id: 1, promotion_name: "Nombre de la promoción 1" },
@@ -218,6 +216,18 @@ export default function BusinessView() {
       domingo: [{ open: "07:00", close: "12:00" }],
     },
   };
+
+    const openInMapNativeApp = () => {
+      if (business_data.coordinates != null) {
+        const lat = business_data.coordinates.latitude
+        const lng = business_data.coordinates.longitude
+        Linking.openURL(`https://www.google.com/maps?q=${lat},${lng}`)
+      }
+      else {
+        const lat = null
+        const lng = null
+      }
+  }
 
   return (
     <SafeAreaView style={globalStyles.mainContainer}>
@@ -405,13 +415,27 @@ export default function BusinessView() {
             </View>
 
             {/* Ubicación */}
-            <View style={{ ...styles.card, marginHorizontal: 5 }}>
-              <Text style={{ ...styles.text }}>Ubicación </Text>
-              <View style={styles.mapPlaceholder}>
-                <Text>Aquí va el mapa</Text>
+            { business_data.coordinates &&
+              <View style = {{...styles.card}}>
+                <Text style = {{...styles.text, marginBottom: 10}}>Ubicación</Text>
+                <MapView
+                  onPress={openInMapNativeApp}
+                  style={{ width: width * 0.8, height: width * 0.5, borderRadius: 12, alignSelf: 'center' }}
+                  scrollEnabled={false}
+                  zoomEnabled={false}
+                  rotateEnabled={false}
+                  pitchEnabled={false}
+                  initialRegion={{
+                    latitude: business_data.coordinates.latitude,
+                    longitude: business_data.coordinates.longitude,
+                    latitudeDelta: 0.01,
+                    longitudeDelta: 0.01,
+                  }}
+                >
+                  <Marker coordinate={{ latitude: business_data.coordinates.latitude, longitude: business_data.coordinates.longitude }} />
+                </MapView>
               </View>
-            </View>
-
+            }
             {/* Horario */}
             <View style={{ ...styles.card, marginHorizontal: 5 }}>
               <Text

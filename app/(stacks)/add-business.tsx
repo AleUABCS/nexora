@@ -1,4 +1,6 @@
+import { colors } from "@/constants/globalStyles";
 import { Ionicons } from "@expo/vector-icons";
+import * as Location from 'expo-location';
 import { useRouter } from "expo-router";
 import { getAuth } from "firebase/auth";
 import { addDoc, collection, getFirestore } from "firebase/firestore";
@@ -19,6 +21,7 @@ import {
   View,
 } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import MapView, { Marker } from 'react-native-maps';
 import { SafeAreaView } from "react-native-safe-area-context";
 import Select, { ISelectItem } from "rn-custom-select-dropdown";
 import appFirebase from "../../credenciales.js";
@@ -64,14 +67,28 @@ export default function RegisterBusinessScreen() {
   const regex = /^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/;
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  const location = null;
+  const [userLocation, setUserLocation] = useState<{latitude: number, longitude: number} | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<{latitude: number, longitude: number} | null>(null);
+
   const { images, clearImages, schedule, clearSchedule } = useBusinessStore();
   const [preview, setPreview] = useState(images[0]);
 
   useEffect(() => {
-    if (images[0]) setPreview(images[0]);
+    if (images[0]) setPreview(images[0])
+    
+    const getLocation = async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync()
+      if (status !== 'granted') return
+      
+      const loc = await Location.getCurrentPositionAsync({})
+      setUserLocation({
+        latitude: loc.coords.latitude,
+        longitude: loc.coords.longitude,
+      })
+    }
+    getLocation()
   }, [images]);
-
+  console.log(userLocation)
   // Cuando regresa de set-schedule, recoge el horario via params no aplica aquí
   // El horario se pasa directo al objeto al registrar
 
@@ -138,6 +155,7 @@ export default function RegisterBusinessScreen() {
         imagenes: imageUrls,
         horario: schedule,
         createdAt: new Date().toISOString(),
+        location: selectedLocation ?? null,
       };
 
       await addDoc(collection(db, "negocios"), newBusiness);
@@ -320,31 +338,30 @@ export default function RegisterBusinessScreen() {
             <View style={styles.locationContainer}>
               <View style={styles.card}>
                 <Text style={styles.label}>Ubicación</Text>
-                <View style={styles.mapContainer}>
-                  {!location ? (
-                    <Text
-                      style={{
-                        ...styles.placeHolderTextColor,
-                        textAlign: "center",
-                        margin: 20,
-                      }}
-                    >
-                      Añade una ubicación para que tus futuros clientes puedan
-                      encontrar tu negocio
-                    </Text>
-                  ) : (
-                    <Text>Mapa con ubicación</Text>
-                  )}
-                </View>
-                <TouchableOpacity style={styles.iconButton}>
+                <MapView
+                  style={{ width: width * 0.8, height: width * 0.5 }}
+                    region={{
+                      latitude: userLocation?.latitude ?? 24.1426,
+                      longitude: userLocation?.longitude ?? -110.3128,
+                      latitudeDelta: 0.01,
+                      longitudeDelta: 0.01,
+                    }}
+
+                  onPress={(e) => setSelectedLocation(e.nativeEvent.coordinate)}
+                >
+                  {selectedLocation && <Marker coordinate={selectedLocation} />}
+                </MapView>
+                <TouchableOpacity style={{...styles.iconButton, backgroundColor: colors.warn}}
+                  onPress={() => setSelectedLocation(null)}
+                >
                   <Ionicons
-                    name="location-outline"
+                    name="remove"
                     size={24}
                     color="#ffffff"
                     style={{ marginRight: 10 }}
                   />
                   <Text style={{ ...styles.buttonText, fontSize: 14 }}>
-                    Ubicación
+                    Eliminar
                   </Text>
                 </TouchableOpacity>
               </View>
