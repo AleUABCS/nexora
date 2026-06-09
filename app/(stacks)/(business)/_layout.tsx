@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 
-export default function ReviewsLayout () {
+export default function BusinessLayout() {
+  // Configuración del enrutador principal para la gestión y vista de un negocio
   return (
     <Stack>
       <Stack.Screen 
@@ -12,11 +13,11 @@ export default function ReviewsLayout () {
         options={{ headerShown: false }} 
       />
       <Stack.Screen 
-        name="edit-business" 
+        name="edit_business" 
         options={{ headerShown: false }} 
       />
       <Stack.Screen 
-        name="(reviews-business)" 
+        name="(reviews_business)" 
         options={{ headerShown: false }} 
       />
     </Stack>

@@ -1,15 +1,15 @@
 import { Stack } from 'expo-router';
 
-export default function StackLayout () {
+export default function AppStackLayout() {
+  // Configuración centralizada de las rutas de la pila (Stack) de la aplicación
   return (
     <Stack>
       <Stack.Screen 
-        name="add-business" 
+        name="add_business" 
         options={{ headerShown: false }} 
       />
-      
       <Stack.Screen 
-        name="set-schedule" 
+        name="set_schedule" 
         options={{ headerShown: false }} 
       />
       <Stack.Screen 
@@ -21,7 +21,7 @@ export default function StackLayout () {
         options={{ headerShown: false }} 
       />
       <Stack.Screen 
-        name="business-images" 
+        name="business_images" 
         options={{ headerShown: false }} 
       />
       <Stack.Screen 
@@ -33,7 +33,7 @@ export default function StackLayout () {
         options={{ headerShown: false }} 
       />
       <Stack.Screen 
-        name="customer-promotions" 
+        name="customer_promotions" 
         options={{ headerShown: false }} 
       />
     </Stack>

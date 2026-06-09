@@ -1,24 +1,25 @@
-import React from 'react';
-import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { Tabs } from 'expo-router';
+import React from 'react';
 
-export default function TabLayout() {
+const tabBarOptions = {
+  headerShown: false,
+  tabBarActiveTintColor: '#155EEF',
+  tabBarInactiveTintColor: '#A0A0A0',
+  tabBarStyle: {
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
+    height: 70,
+    paddingBottom: 8,
+    paddingTop: 8,
+  },
+};
+
+export default function TabNavigationLayout() {
+  // Configuración del enrutador de pestañas principal de la aplicación
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: '#155EEF',
-        tabBarInactiveTintColor: '#A0A0A0',
-        tabBarStyle: {
-          backgroundColor: '#FFFFFF',
-          borderTopWidth: 1,
-          borderTopColor: '#F0F0F0',
-          height: 70,
-          paddingBottom: 8,
-          paddingTop: 8,
-        },
-      }}
-    >
+    <Tabs screenOptions={tabBarOptions}>
       <Tabs.Screen
         name="index"
         options={{
@@ -28,7 +29,6 @@ export default function TabLayout() {
           ),
         }}
       />
-      
       <Tabs.Screen
         name="store"
         options={{

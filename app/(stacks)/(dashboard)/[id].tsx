@@ -1,185 +1,186 @@
-import { colors, globalStyles } from "@/constants/globalStyles";
+import { colors, globalStyles } from "@/constants/global_styles";
 import { Ionicons } from "@expo/vector-icons";
-import { useLocalSearchParams } from "expo-router";
+import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import {
-    collection,
-    doc,
-    getCountFromServer,
-    getDoc,
-    getDocs,
-    getFirestore,
-    query,
-    where,
+  collection,
+  doc,
+  getCountFromServer,
+  getDoc,
+  getDocs,
+  getFirestore,
+  query,
+  where,
+  Timestamp,
 } from "firebase/firestore";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
-    ActivityIndicator,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 import { BarChart } from "react-native-gifted-charts";
 import { SafeAreaView } from "react-native-safe-area-context";
-import appFirebase from "../../../credenciales.js";
+import appFirebase from "../../../credentials.js";
 
 const db = getFirestore(appFirebase);
 
 export default function DashboardView() {
-  const [datosSemana, setDatosSemana] = useState<any[]>([]);
-  const [totalReviews, setTotalReviews] = useState(0);
-  const [promedioRating, setPromedioRating] = useState(0);
   const { id } = useLocalSearchParams();
-  const [negocio, setNegocio] = useState<any>(null);
-  const [cargando, setCargando] = useState(true);
-  const [clicksTotales, setClicksTotales] = useState(0);
-  const [clicksHoy, setClicksHoy] = useState(0);
+  const businessId = id as string;
 
-  useEffect(() => {
-    const obtenerNegocio = async () => {
-      try {
-        const docRef = doc(db, "negocios", id as string);
-        const docSnap = await getDoc(docRef);
+  const [weeklyData, setWeeklyData] = useState<any[]>([]);
+  const [totalReviews, setTotalReviews] = useState(0);
+  const [averageRating, setAverageRating] = useState(0);
+  const [businessData, setBusinessData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [totalClicks, setTotalClicks] = useState(0);
+  const [todayClicks, setTodayClicks] = useState(0);
+  const [yesterdayClicks, setYesterdayClicks] = useState(0);
+  const [activePromotions, setActivePromotions] = useState<any[]>([]);
 
-        if (docSnap.exists()) {
-          setNegocio(docSnap.data());
-        } else {
-          console.log("No existe el negocio");
-        }
-      } catch (error) {
-        console.error("Error consultando Firebase:", error);
-      } finally {
-        setCargando(false);
+  useFocusEffect(
+    useCallback(() => {
+      if (!businessId) {
+        setIsLoading(false);
+        return;
       }
-    };
 
-    if (id) {
-      obtenerNegocio();
-    } else {
-      setCargando(false);
-    }
-  }, [id]);
-
-  useEffect(() => {
-    const calcularMetricasClicks = async () => {
-      try {
-        // 1. Clicks Totales
-        const qTotal = query(
-          collection(db, "clicks_negocios"),
-          where("business_id", "==", id),
-        );
-        const snapTotal = await getCountFromServer(qTotal);
-        setClicksTotales(snapTotal.data().count);
-
-        // 2. Clicks de Hoy
-        const inicioDeHoy = new Date();
-        inicioDeHoy.setHours(0, 0, 0, 0);
-
-        const qHoy = query(
-          collection(db, "clicks_negocios"),
-          where("business_id", "==", id),
-          where("created_at", ">=", inicioDeHoy),
-        );
-        const snapHoy = await getCountFromServer(qHoy);
-        setClicksHoy(snapHoy.data().count);
-
-        // 3. Clicks Semanales
-        const sieteDiasAtras = new Date();
-        sieteDiasAtras.setDate(sieteDiasAtras.getDate() - 6);
-        sieteDiasAtras.setHours(0, 0, 0, 0);
-
-        const qSemana = query(
-          collection(db, "clicks_negocios"),
-          where("business_id", "==", id),
-          where("created_at", ">=", sieteDiasAtras),
-        );
-
-        const querySnapshot = await getDocs(qSemana);
-
-        const diasLetras = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
-        const conteoDias: { [key: string]: number } = {};
-        const ordenDias: string[] = [];
-
-        for (let i = 6; i >= 0; i--) {
-          const d = new Date();
-          d.setDate(d.getDate() - i);
-          const nombreDia = diasLetras[d.getDay()];
-          conteoDias[nombreDia] = 0;
-          ordenDias.push(nombreDia);
-        }
-
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          if (data.created_at) {
-            const fechaClick = data.created_at.toDate();
-            const nombreDiaClick = diasLetras[fechaClick.getDay()];
-            if (conteoDias[nombreDiaClick] !== undefined) {
-              conteoDias[nombreDiaClick] += 1;
-            }
+      const fetchDashboardData = async () => {
+        setIsLoading(true);
+        try {
+          const docRef = doc(db, "negocios", businessId);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            setBusinessData(docSnap.data());
           }
-        });
 
-        const datosFormateados = ordenDias.map((dia) => ({
-          value: conteoDias[dia],
-          label: dia,
-          frontColor: colors.mainBlue,
-          topLabelComponent: () => (
-            <Text
-              style={{
-                fontSize: 10,
-                fontWeight: "bold",
-                marginBottom: 4,
-                color: "#333",
-              }}
-            >
-              {conteoDias[dia] > 0 ? conteoDias[dia] : ""}
-            </Text>
-          ),
-        }));
+          // 2. Clicks Totales
+          const qTotal = query(
+            collection(db, "clicks_negocios"),
+            where("business_id", "==", businessId)
+          );
+          const snapTotal = await getCountFromServer(qTotal);
+          setTotalClicks(snapTotal.data().count);
 
-        setDatosSemana(datosFormateados);
-      } catch (error) {
-        console.error("Error calculando métricas de clicks:", error);
-      }
-    };
+          // 3. Clicks de Hoy y Ayer para la comparativa de porcentaje
+          const startOfToday = new Date();
+          startOfToday.setHours(0, 0, 0, 0);
 
-    if (id) calcularMetricasClicks();
-  }, [id]);
+          const startOfYesterday = new Date(startOfToday);
+          startOfYesterday.setDate(startOfYesterday.getDate() - 1);
 
-  useEffect(() => {
-    const calcularPromedioYTotal = async () => {
-      try {
-        const q = query(
-          collection(db, "reviews"),
-          where("business_id", "==", id),
-        );
+          const qToday = query(
+            collection(db, "clicks_negocios"),
+            where("business_id", "==", businessId),
+            where("created_at", ">=", startOfToday)
+          );
+          const snapToday = await getCountFromServer(qToday);
+          setTodayClicks(snapToday.data().count);
 
-        const countSnapshot = await getCountFromServer(q);
-        const total = countSnapshot.data().count;
-        setTotalReviews(total);
+          const qYesterday = query(
+            collection(db, "clicks_negocios"),
+            where("business_id", "==", businessId),
+            where("created_at", ">=", startOfYesterday),
+            where("created_at", "<", startOfToday)
+          );
+          const snapYesterday = await getCountFromServer(qYesterday);
+          setYesterdayClicks(snapYesterday.data().count || 1); 
 
-        if (total > 0) {
-          const querySnapshot = await getDocs(q);
-          let sumaCalificaciones = 0;
+          // 4. Clicks Semanales (Gráfica)
+          const sevenDaysAgo = new Date();
+          sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+          sevenDaysAgo.setHours(0, 0, 0, 0);
 
-          querySnapshot.forEach((doc) => {
-            sumaCalificaciones += doc.data().rating;
+          const qWeek = query(
+            collection(db, "clicks_negocios"),
+            where("business_id", "==", businessId),
+            where("created_at", ">=", sevenDaysAgo)
+          );
+          const weekSnapshot = await getDocs(qWeek);
+
+          const dayLabels = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+          const daysCount: { [key: string]: number } = {};
+          const daysOrder: string[] = [];
+
+          for (let i = 6; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            const dayName = dayLabels[d.getDay()];
+            daysCount[dayName] = 0;
+            daysOrder.push(dayName);
+          }
+
+          weekSnapshot.forEach((doc) => {
+            const data = doc.data();
+            if (data.created_at) {
+              const clickDate = data.created_at.toDate();
+              const clickDayName = dayLabels[clickDate.getDay()];
+              if (daysCount[clickDayName] !== undefined) {
+                daysCount[clickDayName] += 1;
+              }
+            }
           });
 
-          const promedio = sumaCalificaciones / total;
-          setPromedioRating(Number(promedio.toFixed(1)));
-        } else {
-          setPromedioRating(0);
+          const formattedData = daysOrder.map((day) => ({
+            value: daysCount[day],
+            label: day,
+            frontColor: colors.mainBlue,
+            topLabelComponent: () => (
+              <Text style={styles.chartTopLabel}>
+                {daysCount[day] > 0 ? daysCount[day] : ""}
+              </Text>
+            ),
+          }));
+          setWeeklyData(formattedData);
+
+          // 5. Métricas de Reseñas
+          const qReviews = query(
+            collection(db, "reviews"), 
+            where("business_id", "==", businessId)
+          );
+          const reviewsCountSnap = await getCountFromServer(qReviews);
+          const totalRev = reviewsCountSnap.data().count;
+          setTotalReviews(totalRev);
+
+          if (totalRev > 0) {
+            const reviewsSnap = await getDocs(qReviews);
+            let sumRatings = 0;
+            reviewsSnap.forEach((doc) => {
+              sumRatings += doc.data().rating;
+            });
+            setAverageRating(Number((sumRatings / totalRev).toFixed(1)));
+          } else {
+            setAverageRating(0);
+          }
+
+          // 6. Promociones Activas Reales
+          const now = new Date();
+          const qPromotions = query(
+            collection(db, "negocios", businessId, "promociones"),
+            where("endDate", ">=", Timestamp.fromDate(now))
+          );
+          const promosSnap = await getDocs(qPromotions);
+          const promosData = promosSnap.docs.map((doc) => ({
+            id: doc.id,
+            name: doc.data().name,
+          }));
+          setActivePromotions(promosData);
+
+        } catch (error) {
+          Alert.alert("Error", "No se pudo cargar el panel de control. Revisa tu conexión a internet.");
+        } finally {
+          setIsLoading(false);
         }
-      } catch (error) {
-        console.error("Error calculando el promedio:", error);
-      }
-    };
+      };
 
-    if (id) calcularPromedioYTotal();
-  }, [id]);
+      fetchDashboardData();
+    }, [businessId])
+  );
 
-  if (cargando)
+  if (isLoading)
     return (
       <ActivityIndicator
         size="large"
@@ -188,29 +189,14 @@ export default function DashboardView() {
       />
     );
 
-  if (!negocio && !cargando)
+  if (!businessData && !isLoading)
     return (
       <Text style={{ textAlign: "center", marginTop: 50 }}>
         Negocio no encontrado
       </Text>
     );
 
-  // Datos mockeados y calculados
-  const info = {
-    business_id: id,
-    name: negocio?.nombreNegocio || "Nombre no disponible",
-    clicks: clicksTotales, // Actualizado a total real
-    rate: promedioRating,
-    reviews: totalReviews,
-    active_promotions: [
-      { id: 1, name: "Nombre promoción 1", redeemed: 3 },
-      { id: 2, name: "Promoción 2 nombre", redeemed: 1 },
-    ],
-    clicksPastDay: 1222,
-    clicksNow: clicksHoy,
-  };
-
-  const percentage = (info.clicksNow / info.clicksPastDay) * 100;
+  const percentage = (todayClicks / yesterdayClicks) * 100;
   const barValue = Math.min(percentage, 100);
 
   const data = [
@@ -227,7 +213,6 @@ export default function DashboardView() {
 
   return (
     <SafeAreaView style={globalStyles.mainContainer}>
-      {/* Añadimos un ScrollView para que no se desborde el contenido si la pantalla es pequeña */}
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ flexGrow: 1, paddingBottom: 20 }}
@@ -243,10 +228,9 @@ export default function DashboardView() {
             numberOfLines={2}
             ellipsizeMode="tail"
           >
-            {info.name}
+            {businessData.nombreNegocio || "Nombre no disponible"}
           </Text>
 
-          {/* Tarjetas Superiores (Totales, Calificación, Clicks Hoy) */}
           <View
             style={{
               flexDirection: "row",
@@ -256,20 +240,17 @@ export default function DashboardView() {
             }}
           >
             <View style={{ width: "48%", justifyContent: "space-between" }}>
-              {/* Clicks totales */}
               <View style={{ ...styles.card, height: 200, width: "100%" }}>
                 <Text style={{ ...styles.cardText, fontSize: 20 }}>
                   Clicks Totales
                 </Text>
-                <Text style={styles.cardInfoText}>{info.clicks}</Text>
+                <Text style={styles.cardInfoText}>{totalClicks}</Text>
               </View>
 
-              {/* Calificación */}
               <View style={{ ...styles.card, height: 200, width: "100%" }}>
                 <Text style={{ ...styles.cardText, fontSize: 20 }}>
                   Calificación
                 </Text>
-
                 <View
                   style={{
                     flexDirection: "row",
@@ -279,7 +260,7 @@ export default function DashboardView() {
                   }}
                 >
                   <Text style={{ ...styles.cardInfoText, marginTop: 0 }}>
-                    {info.rate}
+                    {averageRating}
                   </Text>
                   <Ionicons
                     name="star"
@@ -288,8 +269,7 @@ export default function DashboardView() {
                     style={{ marginLeft: 5 }}
                   />
                 </View>
-
-                <Text style={styles.smallText}>{info.reviews} Reseñas</Text>
+                <Text style={styles.smallText}>{totalReviews} Reseñas</Text>
               </View>
             </View>
 
@@ -314,7 +294,7 @@ export default function DashboardView() {
                     marginBottom: 20,
                   }}
                 >
-                  {info.clicksNow}
+                  {todayClicks}
                 </Text>
 
                 <BarChart
@@ -343,14 +323,12 @@ export default function DashboardView() {
                     marginTop: 15,
                   }}
                 >
-                  {percentage.toFixed(0)}% respecto al mismo día de la semana
-                  pasada
+                  {percentage.toFixed(0)}% respecto al día de ayer
                 </Text>
               </View>
             </View>
           </View>
 
-          {/* Nueva Tarjeta: Rendimiento Semanal */}
           <View
             style={{
               ...styles.card,
@@ -375,7 +353,7 @@ export default function DashboardView() {
 
             <View style={{ alignSelf: "center", marginLeft: -20 }}>
               <BarChart
-                data={datosSemana}
+                data={weeklyData}
                 barWidth={22}
                 spacing={18}
                 barBorderRadius={4}
@@ -396,7 +374,6 @@ export default function DashboardView() {
             </View>
           </View>
 
-          {/* Tarjeta inferior: Promociones */}
           <View
             style={{
               ...styles.card,
@@ -412,8 +389,8 @@ export default function DashboardView() {
               Promociones activas
             </Text>
 
-            {info.active_promotions.length > 0 ? (
-              info.active_promotions.map((item) => (
+            {activePromotions.length > 0 ? (
+              activePromotions.map((item) => (
                 <View key={item.id} style={{ width: "100%", marginBottom: 15 }}>
                   <View
                     style={{
@@ -431,16 +408,6 @@ export default function DashboardView() {
                       }}
                     >
                       {item.name}
-                    </Text>
-                    <Text
-                      style={{
-                        ...styles.smallText,
-                        fontSize: 11,
-                        marginTop: 0,
-                        color: colors.placeHolder,
-                      }}
-                    >
-                      {item.redeemed} canjeadas
                     </Text>
                   </View>
                   <View
@@ -489,5 +456,11 @@ const styles = StyleSheet.create({
     color: colors.regularText,
     textAlign: "center",
     marginTop: 10,
+  },
+  chartTopLabel: {
+    fontSize: 10,
+    fontWeight: "bold",
+    marginBottom: 4,
+    color: "#333",
   },
 });

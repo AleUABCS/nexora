@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 
 export default function AuthLayout() {
+  // Configuración del enrutador para el flujo de autenticación, omitiendo las cabeceras superiores
   return (
     <Stack>
       <Stack.Screen 

@@ -1,17 +1,21 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useState, useEffect } from "react";
 import { getAuth } from "firebase/auth";
 import {
+  addDoc,
+  collection,
   doc,
   getDoc,
   getFirestore,
-  addDoc,
-  collection,
+  getDocs,
+  query,
+  where,
+  updateDoc,  
 } from "firebase/firestore";
+import { useEffect, useState } from "react";
 import {
-  Alert,
   ActivityIndicator,
+  Alert,
   Keyboard,
   Pressable,
   ScrollView,
@@ -23,8 +27,9 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { colors, globalStyles } from "../../../../constants/globalStyles";
-import appFirebase from "../../../../credenciales.js";
+import { colors, globalStyles } from "../../../../constants/global_styles";
+import appFirebase from "../../../../credentials.js";
+
 const db = getFirestore(appFirebase);
 
 interface StarRatingProps {
@@ -35,76 +40,99 @@ export default function NewReview({ onChange }: StarRatingProps) {
   const router = useRouter();
   const auth = getAuth(appFirebase);
   const { id } = useLocalSearchParams();
-  const [negocio, setNegocio] = useState<any>(null);
-  const [cargando, setCargando] = useState(true);
-
+  const [businessData, setBusinessData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [rating, setRating] = useState(0);
-  const [review_description, setDescription] = useState("");
+  const [reviewDescription, setReviewDescription] = useState("");
 
   useEffect(() => {
-    const obtenerNegocio = async () => {
+    const fetchBusinessData = async () => {
       try {
         const docRef = doc(db, "negocios", id as string);
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
-          setNegocio(docSnap.data());
+          setBusinessData(docSnap.data());
         } else {
-          console.log("No existe el negocio");
+          Alert.alert("Error", "No se encontró la información del negocio.");
+          router.back();
         }
       } catch (error) {
-        console.error("Error consultando Firebase:", error);
+        Alert.alert(
+          "Error de conexión",
+          "No se pudieron cargar los datos del negocio.",
+        );
       } finally {
-        setCargando(false);
+        setIsLoading(false);
       }
     };
 
-    if (id) obtenerNegocio();
+    if (id) fetchBusinessData();
   }, [id]);
 
-  if (cargando)
+  if (isLoading)
     return <ActivityIndicator size="large" style={{ marginTop: 50 }} />;
-  if (!negocio) return <Text>Negocio no encontrado</Text>;
+  if (!businessData) return <Text>Negocio no encontrado</Text>;
 
-  let review_data = {
-    business_id: id,
-    name_business: negocio.nombreNegocio,
-    rate: rating, // Calificación
-    description: review_description, // Descripción
-  };
-  const hanldeReviewUpload = async () => {
-    const usuarioActual = auth.currentUser;
-    if (!usuarioActual) {
-      Alert.alert("Aviso", "Usuario no logueado");
+  const handleReviewUpload = async () => {
+    const currentUser = auth.currentUser;
+    const trimmedDescription = reviewDescription.trim();
+
+    if (!currentUser) {
+      Alert.alert("Aviso", "Debes iniciar sesión para publicar una reseña");
       return;
     }
-    if (review_description === "") {
-      Alert.alert("Aviso", "Por favor llena todos los campos");
+    if (trimmedDescription === "") {
+      Alert.alert("Aviso", "Por favor escribe una descripción para tu reseña");
       return;
     }
+    if (rating === 0) {
+      Alert.alert(
+        "Aviso",
+        "Por favor selecciona una calificación de estrellas",
+      );
+      return;
+    }
+
     try {
       const newReview = {
-        userId: usuarioActual.uid,
+        userId: currentUser.uid,
         business_id: id,
-        review: review_description,
+        review: trimmedDescription,
         rating: rating,
-
         createdAt: new Date().toISOString(),
       };
 
       await addDoc(collection(db, "reviews"), newReview);
+      const reviewsQuery = query(
+        collection(db, "reviews"),
+        where("business_id", "==", id),
+      );
+      const snapshot = await getDocs(reviewsQuery);
+      let sum = 0;
+      snapshot.forEach((d) => {
+        sum += d.data().rating;
+      });
+      const newAverage = Number((sum / snapshot.size).toFixed(2));
 
-      Alert.alert("Éxito", "Review añadida");
+      await updateDoc(doc(db, "negocios", id as string), {
+        ratingPromedio: newAverage,
+      });
+
+      Alert.alert("Éxito", "Tu reseña ha sido publicada");
+      router.back();
+
+      Alert.alert("Éxito", "Tu reseña ha sido publicada");
       router.back();
     } catch (error) {
-      console.log(error);
-      Alert.alert("Error", "No se pudo añadir la review");
+      Alert.alert(
+        "Error",
+        "Ocurrió un problema al subir tu reseña. Inténtalo más tarde.",
+      );
     }
-
-    router.back();
   };
+
   return (
-    // Contenedor padre
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <SafeAreaView style={globalStyles.mainContainer}>
         <View style={[globalStyles.secondContainer]}>
@@ -118,10 +146,10 @@ export default function NewReview({ onChange }: StarRatingProps) {
             <Text
               style={{ fontSize: 32, color: colors.regularText, marginTop: 40 }}
             >
-              {review_data.name_business}
+              {businessData.nombreNegocio}
             </Text>
           </View>
-          {/* Contenedor con estilo de tarjeta */}
+
           <View style={{ ...globalStyles.card, marginTop: 25, paddingTop: 40 }}>
             <View
               style={{
@@ -160,8 +188,8 @@ export default function NewReview({ onChange }: StarRatingProps) {
                   style={{ ...styles.textArea, height: 150, marginTop: 20 }}
                   placeholder="Escribe tu reseña"
                   placeholderTextColor="#A0A0A0"
-                  value={review_description}
-                  onChangeText={setDescription}
+                  value={reviewDescription}
+                  onChangeText={setReviewDescription}
                 />
               </ScrollView>
             </View>
@@ -174,21 +202,19 @@ export default function NewReview({ onChange }: StarRatingProps) {
                 width: "60%",
               }}
             >
-              {/* Botón "Ver negocio" */}
               <TouchableOpacity
                 style={{ ...globalStyles.button, width: "100%" }}
-                onPress={hanldeReviewUpload}
+                onPress={handleReviewUpload}
               >
                 <Ionicons
                   name="arrow-up"
                   color="#FFFFFF"
                   size={24}
                   style={{ paddingRight: 5 }}
-                ></Ionicons>
+                />
                 <Text style={globalStyles.buttonText}>Publicar</Text>
               </TouchableOpacity>
 
-              {/* Botón "Cancelar" */}
               <TouchableOpacity
                 style={{
                   ...globalStyles.button,

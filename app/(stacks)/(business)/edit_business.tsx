@@ -1,12 +1,17 @@
-import { colors } from "@/constants/globalStyles";
 import { Ionicons } from "@expo/vector-icons";
-import * as Location from 'expo-location';
-import { useRouter } from "expo-router";
-import { getAuth } from "firebase/auth";
-import { addDoc, collection, getFirestore } from "firebase/firestore";
+import * as Location from "expo-location";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import {
+  deleteDoc,
+  doc,
+  getDoc,
+  getFirestore,
+  updateDoc,
+} from "firebase/firestore";
 import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
 import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Dimensions,
   Image,
@@ -21,26 +26,16 @@ import {
   View,
 } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Select, { ISelectItem } from "rn-custom-select-dropdown";
-import appFirebase from "../../credenciales.js";
-import { pickImages, useBusinessStore } from "../../store/business-store";
+import { colors } from "../../../constants/global_styles";
+import appFirebase from "../../../credentials.js";
+import { pickImages, useBusinessStore } from "../../../store/business_store";
 
-const auth = getAuth(appFirebase);
-const db = getFirestore(appFirebase);
 const storage = getStorage(appFirebase);
-
+const db = getFirestore(appFirebase);
 const width = Dimensions.get("window").width;
-
-type DayKey = "lunes" | "martes" | "miercoles" | "jueves" | "viernes" | "sabado" | "domingo";
-type TimeSlot = { id: number; opening: string; closing: string };
-type Schedule = { [key in DayKey]: TimeSlot[] };
-
-const emptySchedule: Schedule = {
-  lunes: [], martes: [], miercoles: [], jueves: [],
-  viernes: [], sabado: [], domingo: [],
-};
 
 const categories: Array<ISelectItem<string>> = [
   { label: "Abarrotes y Tienditas", value: "Abarrotes y Tienditas" },
@@ -55,137 +50,217 @@ const categories: Array<ISelectItem<string>> = [
   { label: "Veterinarias", value: "Veterinarias" },
 ];
 
-export default function RegisterBusinessScreen() {
-  const [nameBusiness, setNameBusiness] = useState("");
+export default function EditBusinessScreen() {
+  const router = useRouter();
+  const { id } = useLocalSearchParams();
+  const businessId = id as string;
+
+  const [loading, setLoading] = useState(false);
+  const [businessName, setBusinessName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [description, setDescription] = useState("");
-  const [uploading, setUploading] = useState(false);
   const [selectedValue, setSelectedValue] = useState<ISelectItem<string> | null>(null);
-  const router = useRouter();
 
-  const regex = /^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/;
+  const phoneRegex = /^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/;
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  const [userLocation, setUserLocation] = useState<{latitude: number, longitude: number} | null>(null);
-  const [selectedLocation, setSelectedLocation] = useState<{latitude: number, longitude: number} | null>(null);
+  const {
+    images,
+    setImages,
+    clearImages,
+    schedule,
+    setSchedule,
+    clearSchedule,
+  } = useBusinessStore();
 
-  const { images, clearImages, schedule, clearSchedule } = useBusinessStore();
-  const [preview, setPreview] = useState(images[0]);
+  const [userLocation, setUserLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+  
+  const [selectedLocation, setSelectedLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
 
   useEffect(() => {
-    if (images[0]) setPreview(images[0])
-    
-    const getLocation = async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync()
-      if (status !== 'granted') return
-      
-      const loc = await Location.getCurrentPositionAsync({})
-      setUserLocation({
-        latitude: loc.coords.latitude,
-        longitude: loc.coords.longitude,
-      })
-    }
-    getLocation()
-  }, [images]);
-  console.log(userLocation)
-  // Cuando regresa de set-schedule, recoge el horario via params no aplica aquí
-  // El horario se pasa directo al objeto al registrar
+    const fetchBusinessData = async () => {
+      try {
+        setLoading(true);
+        const docRef = doc(db, "negocios", businessId);
+        const docSnap = await getDoc(docRef);
 
-  const uploadImagesToStorage = async (userId: string): Promise<string[]> => {
-    const uploadedUrls: string[] = [];
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setBusinessName(data.nombreNegocio || "");
+          setDescription(data.descripcion || "");
+          setEmail(data.emailNegocio || "");
+          setPhone(data.telefonoNegocio || "");
+          setSelectedLocation(data.location || null);
 
-    for (const imageUri of images) {
-      const response = await fetch(imageUri);
-      const blob = await response.blob();
+          if (data.categoriaNegocio) {
+            setSelectedValue({
+              label: data.categoriaNegocio,
+              value: data.categoriaNegocio,
+            });
+          }
 
-      const filename = `negocios/${userId}/${Date.now()}_${Math.random()
-        .toString(36)
-        .slice(2)}.jpg`;
-      const imageRef = ref(storage, filename);
+          if (data.imagenes && data.imagenes.length > 0) {
+            setImages(data.imagenes);
+          } else {
+            clearImages();
+          }
 
-      await uploadBytes(imageRef, blob);
-      const downloadURL = await getDownloadURL(imageRef);
-      uploadedUrls.push(downloadURL);
-    }
+          if (data.horario) {
+            setSchedule(data.horario);
+          } else {
+            clearSchedule();
+          }
+        } else {
+          Alert.alert("Aviso", "No se encontraron los datos del negocio.");
+          router.back();
+        }
+      } catch (error) {
+        Alert.alert("Error de conexión", "No se pudieron cargar los datos del negocio.");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    return uploadedUrls;
-  };
+    if (businessId) fetchBusinessData();
+  }, [businessId]);
 
-  const handleRegisterBusiness = async () => {
-    const usuarioActual = auth.currentUser;
+  const validateFields = () => {
+    const trimmedName = businessName.trim();
+    const trimmedDesc = description.trim();
+    const trimmedPhone = phone.trim();
+    const trimmedEmail = email.trim();
 
-    if (!usuarioActual) {
-      Alert.alert("Aviso", "Usuario no logueado");
-      return;
-    }
     if (
-      nameBusiness === "" ||
-      description === "" ||
-      phone === "" ||
-      email === "" ||
+      trimmedName === "" ||
+      trimmedDesc === "" ||
+      trimmedPhone === "" ||
+      trimmedEmail === "" ||
       selectedValue === null
     ) {
-      Alert.alert("Aviso", "Por favor llena todos los campos");
-      return;
+      return false;
     }
-    if (!regex.test(phone)) {
-      Alert.alert("Aviso", "El número no es válido");
-      return;
-    }
-    if (!emailRegex.test(email)) {
-      Alert.alert("Aviso", "El email no es válido");
+    if (!phoneRegex.test(trimmedPhone)) return false;
+    if (!emailRegex.test(trimmedEmail)) return false;
+    return true;
+  };
+
+  const handleUpdateBusiness = async () => {
+    if (!validateFields()) {
+      Alert.alert("Aviso", "Por favor, llena correctamente todos los campos sin dejar espacios en blanco.");
       return;
     }
 
     try {
-      setUploading(true);
+      setLoading(true);
 
-      const imageUrls = await uploadImagesToStorage(usuarioActual.uid);
+      let imageUrls: string[] = [];
 
-      const newBusiness = {
-        nombreNegocio: nameBusiness,
-        nombreBusqueda: nameBusiness.toLowerCase(),
-        userId: usuarioActual.uid,
-        descripcion: description,
-        categoriaNegocio: selectedValue!.value,
-        telefonoNegocio: phone,
-        emailNegocio: email,
-        ratingPromedio: 0,
+      for (const imageUri of images) {
+        if (imageUri.startsWith("file://")) {
+          const response = await fetch(imageUri);
+          const blob = await response.blob();
+
+          const filename = `negocios/${businessId}/imagen_${Date.now()}.jpg`;
+          const storageRef = ref(storage, filename);
+
+          await uploadBytes(storageRef, blob);
+          const downloadUrl = await getDownloadURL(storageRef);
+          imageUrls.push(downloadUrl);
+        } else {
+          imageUrls.push(imageUri);
+        }
+      }
+
+      const docRef = doc(db, "negocios", businessId);
+      await updateDoc(docRef, {
+        nombreNegocio: businessName.trim(),
+        descripcion: description.trim(),
+        emailNegocio: email.trim(),
+        telefonoNegocio: phone.trim(),
+        categoriaNegocio: selectedValue?.value,
         imagenes: imageUrls,
-        horario: schedule,
-        createdAt: new Date().toISOString(),
-        location: selectedLocation ?? null,
-      };
+        location: selectedLocation ?? null, 
+      });
 
-      await addDoc(collection(db, "negocios"), newBusiness);
-      clearImages();
-      clearSchedule();
-      Alert.alert("Éxito", "Negocio registrado");
+      Alert.alert("Éxito", "Negocio actualizado correctamente.");
       router.back();
     } catch (error) {
-      console.log(error);
-      Alert.alert("Error", "No se pudo registrar el negocio");
+      Alert.alert("Error", "No se pudieron guardar los cambios. Revisa tu conexión a internet.");
     } finally {
-      setUploading(false);
+      setLoading(false);
     }
+  };
+
+  const handleDeleteBusiness = () => {
+    Alert.alert(
+      "Eliminar negocio",
+      "¿Estás seguro de que quieres eliminar tu negocio? Esta acción no se puede deshacer.",
+      [
+        {
+          text: "Cancelar",
+          style: "cancel",
+        },
+        {
+          text: "Eliminar",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const docRef = doc(db, "negocios", businessId);
+              await deleteDoc(docRef);
+              Alert.alert("Éxito", "El negocio ha sido eliminado correctamente.");
+              router.replace("/(tabs)"); 
+            } catch (error) {
+              Alert.alert("Error", "No se pudo eliminar el negocio. Inténtalo más tarde.");
+            }
+          },
+        },
+      ]
+    );
   };
 
   const askForImages = () => {
     if (images.length > 0) {
-      router.push("/business-images");
+      router.push("/business_images");
     } else {
       pickImages();
     }
   };
 
-  // Navega a set-schedule sin id — cuando regrese el horario
-  // queda en el estado local `schedule` a través del store o navegación
-  // Por ahora se abre la pantalla y al volver el schedule está vacío
-  // Para pasarlo de vuelta, ver nota abajo
-  const handleSetSchedule = () => {
-    router.push("/set-schedule");
-  };
+  const [preview, setPreview] = useState(images[0]);
+
+  useEffect(() => {
+    if (images[0]) setPreview(images[0]);
+
+    const getLocation = async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") return;
+
+      const loc = await Location.getCurrentPositionAsync({});
+      setUserLocation({
+        latitude: loc.coords.latitude,
+        longitude: loc.coords.longitude,
+      });
+    };
+    getLocation();
+  }, [images]);
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.mainContainer}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#0056D2" />
+          <Text style={styles.loadingText}>Cargando negocio...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.mainContainer}>
@@ -202,16 +277,15 @@ export default function RegisterBusinessScreen() {
           nestedScrollEnabled={true}
         >
           <View style={styles.headerContainer}>
-            <Text style={styles.titleText}>Registrar negocio</Text>
+            <Text style={styles.titleText}>Editar negocio</Text>
           </View>
 
           <View style={styles.card}>
-            {/* Imagen y botón */}
             <View style={styles.setImageContainer}>
               <Image
                 source={
                   !images[0]
-                    ? require("../../assets/images/placeholder-image.jpg")
+                    ? require("../../../assets/images/placeholder-image.jpg")
                     : { uri: preview }
                 }
                 style={styles.image}
@@ -224,7 +298,7 @@ export default function RegisterBusinessScreen() {
                   justifyContent: "center",
                   alignItems: "center",
                 }}
-                onPress={askForImages}
+                onPress={() => askForImages()}
               >
                 <Ionicons
                   name="images-outline"
@@ -238,20 +312,18 @@ export default function RegisterBusinessScreen() {
               </TouchableOpacity>
             </View>
 
-            {/* Nombre */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Nombre del Negocio</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Nombre del negocio"
                 placeholderTextColor="#A0A0A0"
-                value={nameBusiness}
-                onChangeText={setNameBusiness}
+                value={businessName}
+                onChangeText={setBusinessName}
                 autoCapitalize="none"
               />
             </View>
 
-            {/* Descripción */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Descripción</Text>
               <TextInput
@@ -265,7 +337,6 @@ export default function RegisterBusinessScreen() {
               />
             </View>
 
-            {/* Categoría */}
             <View style={styles.inputGroup}>
               <GestureHandlerRootView style={{ flex: 1 }}>
                 <Select
@@ -293,7 +364,6 @@ export default function RegisterBusinessScreen() {
               </GestureHandlerRootView>
             </View>
 
-            {/* Correo */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Correo de contacto</Text>
               <TextInput
@@ -307,7 +377,6 @@ export default function RegisterBusinessScreen() {
               />
             </View>
 
-            {/* Teléfono */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Teléfono de contacto</Text>
               <TextInput
@@ -320,38 +389,41 @@ export default function RegisterBusinessScreen() {
               />
             </View>
 
-            {/* Horario */}
             <TouchableOpacity
               style={{
                 ...styles.button,
                 width: width * 0.6,
                 alignSelf: "flex-end",
               }}
-              onPress={handleSetSchedule}
+              onPress={() =>
+                router.push({
+                  pathname: "/set_schedule",
+                  params: { id: businessId },
+                })
+              }
             >
               <Text style={{ ...styles.buttonText, fontSize: 14 }}>
-                Establecer horario
+                Editar horario
               </Text>
             </TouchableOpacity>
 
-            {/* Ubicación */}
             <View style={styles.locationContainer}>
               <View style={styles.card}>
                 <Text style={styles.label}>Ubicación</Text>
                 <MapView
                   style={{ width: width * 0.8, height: width * 0.5 }}
-                    region={{
-                      latitude: userLocation?.latitude ?? 24.1426,
-                      longitude: userLocation?.longitude ?? -110.3128,
-                      latitudeDelta: 0.01,
-                      longitudeDelta: 0.01,
-                    }}
-
+                  region={{
+                    latitude: userLocation?.latitude ?? 24.1426,
+                    longitude: userLocation?.longitude ?? -110.3128,
+                    latitudeDelta: 0.01,
+                    longitudeDelta: 0.01,
+                  }}
                   onPress={(e) => setSelectedLocation(e.nativeEvent.coordinate)}
                 >
                   {selectedLocation && <Marker coordinate={selectedLocation} />}
                 </MapView>
-                <TouchableOpacity style={{...styles.iconButton, backgroundColor: colors.warn}}
+                <TouchableOpacity
+                  style={{ ...styles.iconButton, backgroundColor: colors.warn }}
                   onPress={() => setSelectedLocation(null)}
                 >
                   <Ionicons
@@ -367,15 +439,22 @@ export default function RegisterBusinessScreen() {
               </View>
             </View>
 
-            {/* Publicar */}
             <TouchableOpacity
-              style={[styles.button, uploading && { opacity: 0.6 }]}
-              onPress={handleRegisterBusiness}
-              disabled={uploading}
+              style={styles.button}
+              onPress={handleUpdateBusiness}
             >
-              <Text style={styles.buttonText}>
-                {uploading ? "Publicando..." : "Publicar negocio"}
-              </Text>
+              <Text style={styles.buttonText}>Guardar cambios</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={{
+                ...styles.button,
+                marginTop: 10,
+                backgroundColor: colors.warn,
+              }}
+              onPress={handleDeleteBusiness}
+            >
+              <Text style={styles.buttonText}>Eliminar negocio</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -388,6 +467,16 @@ const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
     backgroundColor: "#FFFFFF",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 12,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: "#555555",
   },
   headerContainer: {
     alignItems: "center",
@@ -439,7 +528,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   buttonText: {
-    color: "#FFFFFF",
+    color: "#ffffff",
     fontSize: 16,
     fontWeight: "bold",
   },
@@ -485,4 +574,4 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
   },
-});
+}); 

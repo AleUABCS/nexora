@@ -17,10 +17,12 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.iankareld.nexora",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#ffffff"
       },
+      
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
@@ -36,6 +38,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "690872a0-c26c-49cb-bf63-a547e34dcd91"
+      }
     }
   }
 }

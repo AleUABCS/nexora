@@ -3,7 +3,6 @@ import { Alert } from 'react-native';
 import { create } from 'zustand';
 
 type DayKey = 'lunes' | 'martes' | 'miercoles' | 'jueves' | 'viernes' | 'sabado' | 'domingo';
-type TimeSlot = { id: number; opening: string; closing: string };
 export type Schedule = { [key in DayKey]: TimeSlot[] };
 
 export const emptySchedule: Schedule = {
@@ -22,6 +21,11 @@ interface BusinessStore {
   setSchedule: (schedule: Schedule) => void;
   clearSchedule: () => void;
 }
+export type TimeSlot = { 
+  id: number; 
+  opening: string; 
+  closing: string 
+};
 
 export const useBusinessStore = create<BusinessStore>((set) => ({
   images: [],

@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 
-export default function PromotionsLayout() {
+export default function CustomerPromotionLayout() {
+  // Configuración del enrutador para el flujo de promociones desde la vista del cliente
   return (
     <Stack>
       <Stack.Screen 
@@ -8,7 +9,7 @@ export default function PromotionsLayout() {
         options={{ headerShown: false }} 
       />
       <Stack.Screen 
-        name="[promotion-id]" 
+        name="[promotion_id]" 
         options={{ headerShown: false }} 
       />
       <Stack.Screen 
@@ -19,7 +20,6 @@ export default function PromotionsLayout() {
         name="completed" 
         options={{ headerShown: false }} 
       />
-
     </Stack>
   );
 }

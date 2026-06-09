@@ -1,13 +1,13 @@
+import { colors, globalStyles } from "@/constants/global_styles";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { useRouter } from "expo-router";
 import * as React from "react";
-import { useState } from "react";
 import { FlatList, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { colors, globalStyles } from "../../constants/globalStyles";
-import { useFavoritesStore } from "../../store/saved-store";
+import { useFavoritesStore } from "../../store/saved_store";
 
-export default function SavedView() {
+export default function SavedBusinessView() {
+  const router = useRouter();
   const { removeSaved, favorites } = useFavoritesStore();
 
   return (
@@ -18,6 +18,7 @@ export default function SavedView() {
         >
           Guardados
         </Text>
+        
         <View style={{ ...globalStyles.card, maxHeight: "50%" }}>
           <FlatList
             data={favorites}
@@ -26,7 +27,7 @@ export default function SavedView() {
               <View style={globalStyles.listItem}>
                 <TouchableOpacity
                   style={{ width: "80%" }}
-                  onPress={() => router.push(`/(business)/${item.id}`)}
+                  onPress={() => router.push(`/(stacks)/(business)/${item.id}`)}
                 >
                   <Text style={globalStyles.listItemText}>{item.name}</Text>
                 </TouchableOpacity>

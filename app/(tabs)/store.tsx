@@ -1,3 +1,5 @@
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useFocusEffect, useRouter } from "expo-router";
 import { getAuth } from "firebase/auth";
 import {
   collection,
@@ -7,13 +9,8 @@ import {
   where,
 } from "firebase/firestore";
 import React, { useCallback, useState } from "react";
-import appFirebase from "../../credenciales.js";
-const auth = getAuth(appFirebase);
-const db = getFirestore(appFirebase);
-
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { Href, useFocusEffect, useRouter } from "expo-router";
 import {
+  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -21,44 +18,38 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import appFirebase from "../../credentials.js";
+import { globalStyles } from "../../constants/global_styles";
 
-export default function BusinessScreen() {
+const auth = getAuth(appFirebase);
+const db = getFirestore(appFirebase);
+
+export default function BusinessManagementView() {
   const router = useRouter();
-  const [negocios, setNegocios] = useState<any[]>([]);
+  const [businesses, setBusinesses] = useState<any[]>([]);
 
   useFocusEffect(
     useCallback(() => {
-      const obtenerNegocios = async () => {
-        const usuarioActual = auth.currentUser;
-
-        if (!usuarioActual) {
-          console.log("No hay usuario autenticado");
-          return;
-        }
+      const fetchBusinesses = async () => {
+        const currentUser = auth.currentUser;
+        if (!currentUser) return;
 
         try {
-          const userId = usuarioActual.uid;
-
-          const consultaFiltrada = query(
+          const q = query(
             collection(db, "negocios"),
-            where("userId", "==", userId),
+            where("userId", "==", currentUser.uid),
           );
-
-          const querySnapshot = await getDocs(consultaFiltrada);
-
-          const lista = querySnapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
-
-          setNegocios(lista);
+          const snapshot = await getDocs(q);
+          setBusinesses(
+            snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })),
+          );
         } catch (error) {
-          console.error("Error al obtener los datos: ", error);
+          Alert.alert("Error", "No se pudieron cargar tus negocios.");
         }
       };
 
-      obtenerNegocios();
-    }, [])
+      fetchBusinesses();
+    }, []),
   );
 
   return (
@@ -70,57 +61,62 @@ export default function BusinessScreen() {
         </View>
 
         <View style={styles.cardTable}>
-          {negocios.map((negocio, index) => (
-            <View key={negocio.id} style={styles.tableRow}>
-              <Text style={styles.businessName}>{negocio.nombreNegocio}</Text>
+          {businesses.map((business, index) => (
+            <View key={business.id} style={styles.tableRow}>
+              <Text style={styles.businessName}>{business.nombreNegocio}</Text>
 
               <View style={styles.actionsContainer}>
                 <TouchableOpacity
                   style={styles.actionButton}
-                  onPress={() => router.push(`../(stacks)/(dashboard)/${negocio.id}` as Href)}
+                  onPress={() =>
+                    router.push(`/(stacks)/(dashboard)/${business.id}`)
+                  }
                 >
                   <Ionicons name="trending-up" size={18} color="#FFFFFF" />
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   style={styles.actionButton}
-                  onPress={() => router.push(`../(stacks)/(business)/${negocio.id}` as Href)}
+                  onPress={() =>
+                    router.push(`/(stacks)/(business)/${business.id}`)
+                  }
                 >
                   <Ionicons name="eye" size={18} color="#FFFFFF" />
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   style={styles.actionButton}
-                  onPress={() => router.push({
-                    pathname: '/(stacks)/(business)/edit-business',
-                    params: { id: negocio.id }
-                  })}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/(stacks)/(business)/edit_business",
+                      params: { id: business.id },
+                    })
+                  }
                 >
                   <Ionicons name="pencil" size={16} color="#FFFFFF" />
                 </TouchableOpacity>
 
-                <TouchableOpacity 
-                  style={styles.actionButton} 
-                  onPress={() => {
-                      router.push({
-                      pathname: '/(stacks)/(business)/promotions',
-                      params: {business_id: negocio.id}
+                <TouchableOpacity
+                  style={styles.actionButton}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/(stacks)/(business)/promotions",
+                      params: { business_id: business.id },
                     })
-                    console.log (negocio.id)
-                  }}
-                  >
+                  }
+                >
                   <Ionicons name="pricetag" size={16} color="#FFFFFF" />
                 </TouchableOpacity>
               </View>
 
-              {index < negocios.length - 1 && <View style={styles.divider} />}
+              {index < businesses.length - 1 && <View style={styles.divider} />}
             </View>
           ))}
         </View>
 
         <Pressable
           style={styles.createButton}
-          onPress={() => router.push("/add-business")}
+          onPress={() => router.push("/add_business")}
         >
           <Ionicons name="add-circle-outline" size={22} color="#FFFFFF" />
           <Text style={styles.createButtonText}>Crear un negocio</Text>
@@ -131,25 +127,7 @@ export default function BusinessScreen() {
 }
 
 const styles = StyleSheet.create({
-  mainContainer: {
-    flex: 1,
-    paddingTop: 100,
-    backgroundColor: "#FFFFFF",
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingBottom: 10,
-  },
-  backButton: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  backText: {
-    fontSize: 16,
-    color: "#333333",
-    marginLeft: 8,
-    fontWeight: "500",
-  },
+  mainContainer: { flex: 1, paddingTop: 60, backgroundColor: "#FFFFFF" },
   contentContainer: {
     alignItems: "center",
     paddingHorizontal: 24,
@@ -159,9 +137,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 20,
-    marginBottom: 35,
-    width: "100%",
+    marginVertical: 35,
   },
   mainTitle: {
     fontSize: 32,
@@ -173,30 +149,21 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderRadius: 16,
     width: "100%",
-    paddingTop: 24,
-    paddingHorizontal: 20,
-    marginBottom: 40,
+    padding: 24,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 16,
     elevation: 4,
+    marginBottom: 40,
   },
-  tableRow: {
-    width: "100%",
-    marginBottom: 20,
-  },
+  tableRow: { width: "100%", marginBottom: 20 },
   businessName: {
     fontSize: 18,
     fontWeight: "500",
     color: "#101828",
     marginBottom: 10,
   },
-  actionsContainer: {
-    flexDirection: "row",
-    gap: 8,
-    marginBottom: 16,
-  },
+  actionsContainer: { flexDirection: "row", gap: 8, marginBottom: 16 },
   actionButton: {
     backgroundColor: "#004EEB",
     width: 38,
@@ -220,10 +187,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     alignSelf: "center",
-    shadowColor: "#004EEB",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
     elevation: 3,
   },
   createButtonText: {

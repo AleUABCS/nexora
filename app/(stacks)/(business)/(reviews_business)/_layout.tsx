@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 
-export default function BusinessReviewsLayout () {
+export default function BusinessReviewLayout() {
+  // Configuración del enrutador para el flujo de reseñas de un negocio específico
   return (
     <Stack>
       <Stack.Screen 
